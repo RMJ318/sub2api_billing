@@ -1,0 +1,26 @@
+{
+  "name": "@core/store",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@core/compute": "0.1.0",
+    "@duckdb/node-api": "1.5.3-r.3",
+    "decimal.js": "10.6.0"
+  },
+  "devDependencies": {
+    "fast-check": "4.8.0"
+  }
+}

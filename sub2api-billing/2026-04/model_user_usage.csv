@@ -1,0 +1,1 @@
+billing_month,user_id,email,username,model,request_count,used_usd,input_tokens,output_tokens,cache_creation_tokens,cache_read_tokens,image_output_tokens,avg_duration_ms
