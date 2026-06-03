@@ -10,9 +10,8 @@
  *
  * This is the side-effecting orchestration layer: it performs filesystem I/O
  * (readdir, stat, readFile) and delegates parsing to the pure compute library.
- * The streaming path for `request_detail.csv` is handled separately (task 15.5);
- * here we still parse it in one pass for correctness while that streaming path
- * is not yet wired.
+ * The largest source file, `request_detail.csv`, is routed through the bounded-
+ * memory streaming loader so the ingestion path matches Requirement 3.1.
  */
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -42,6 +41,7 @@ import type { RecordSchema } from '@core/compute';
 import { InMemoryRecordStore } from '@core/store';
 
 import { isValidBillingMonthFolder, fillBillingMonthFromFolder } from './folder-scanner.js';
+import { streamRequestDetail } from './streaming-loader.js';
 
 /**
  * The five expected CSV files within a billing month folder (Requirement 1.2).
@@ -94,7 +94,8 @@ interface FolderIngestionResult {
  *     (Req 1.2); log skipped-folder (Req 1.4) or missing-file entries
  *     (Req 1.5) as applicable.
  *  4. Parse each present file via the CSV parser and fill `billing_month`
- *     from the folder name when empty (Req 1.3).
+ *     from the folder name when empty (Req 1.3). `request_detail.csv` is
+ *     processed through the streaming loader.
  *  5. Collect rejected-row entries in the ingestion log (Req 2.9).
  *  6. Load valid records into the provided store.
  *  7. Run reconciliation (Req 21.2) and unmatched-reference detection
@@ -253,6 +254,28 @@ async function processFolder(
 
   for (const fileName of presentFiles) {
     const filePath = join(folderPath, fileName);
+    if (fileName === 'request_detail.csv') {
+      const streamResult = await streamRequestDetail({
+        filePath,
+        folderName,
+        batchSize: config.requestDetailBatchSize,
+        collectRecords: true,
+      });
+
+      filesProcessed++;
+      rowsRejected += streamResult.rowsRejected;
+      recordsLoaded += streamResult.recordsLoaded;
+      requestDetails.push(...streamResult.records);
+      logEntries.push(
+        ...streamResult.log.map((entry) =>
+          entry.type === 'rejected_row'
+            ? { ...entry, file: `${folderName}/${fileName}` }
+            : entry,
+        ),
+      );
+      continue;
+    }
+
     let csvText: string;
     try {
       csvText = await readFile(filePath, 'utf-8');
@@ -305,9 +328,6 @@ async function processFolder(
         break;
       case 'api_key_usage.csv':
         keyUsage.push(...(records as unknown as KeyUsageRecord[]));
-        break;
-      case 'request_detail.csv':
-        requestDetails.push(...(records as unknown as RequestDetailRecord[]));
         break;
     }
   }

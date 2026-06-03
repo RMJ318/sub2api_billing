@@ -35,9 +35,15 @@ export interface StreamingLoaderOptions {
   /** The `YYYY-MM` folder name this file belongs to (for Billing_Month fallback). */
   folderName: string;
   /** An open DuckDB connection with the `request_detail` schema created. */
-  connection: DuckDBConnection;
+  connection?: DuckDBConnection;
   /** Number of rows to accumulate before flushing a batch to DuckDB. */
   batchSize?: number;
+  /**
+   * Whether accepted records should be collected in memory and returned to the
+   * caller. Disabled by default so the server-side import path keeps memory
+   * bounded to the active batch.
+   */
+  collectRecords?: boolean;
 }
 
 /** Result of a streaming load run. */
@@ -48,6 +54,8 @@ export interface StreamingLoaderResult {
   rowsRejected: number;
   /** Ingestion log entries for rejected rows. */
   log: IngestionLogEntry[];
+  /** Accepted records, only populated when `collectRecords` is enabled. */
+  records: RequestDetailRecord[];
 }
 
 /**
@@ -65,7 +73,7 @@ export async function streamRequestDetail(
   options: StreamingLoaderOptions,
 ): Promise<StreamingLoaderResult> {
   const batchSize = options.batchSize ?? DEFAULT_REQUEST_DETAIL_BATCH_SIZE;
-  const { filePath, folderName, connection } = options;
+  const { filePath, folderName, connection, collectRecords = false } = options;
 
   let header: string[] | null = null;
   let batch: string[][] = [];
@@ -73,6 +81,7 @@ export async function streamRequestDetail(
   let recordsLoaded = 0;
   let rowsRejected = 0;
   const log: IngestionLogEntry[] = [];
+  const records: RequestDetailRecord[] = [];
 
   const fileStream = createReadStream(filePath, { encoding: 'utf-8' });
   const parser = fileStream.pipe(parse({
@@ -107,6 +116,9 @@ export async function streamRequestDetail(
       recordsLoaded += result.recordsLoaded;
       rowsRejected += result.rowsRejected;
       log.push(...result.log);
+      if (collectRecords) {
+        records.push(...result.records);
+      }
       batchStartRow += batch.length;
       batch = [];
     }
@@ -125,9 +137,12 @@ export async function streamRequestDetail(
     recordsLoaded += result.recordsLoaded;
     rowsRejected += result.rowsRejected;
     log.push(...result.log);
+    if (collectRecords) {
+      records.push(...result.records);
+    }
   }
 
-  return { recordsLoaded, rowsRejected, log };
+  return { recordsLoaded, rowsRejected, log, records };
 }
 
 /**
@@ -139,7 +154,7 @@ async function flushBatch(
   header: string[],
   startRowNumber: number,
   folderName: string,
-  connection: DuckDBConnection,
+  connection: DuckDBConnection | undefined,
   filePath: string,
 ): Promise<StreamingLoaderResult> {
   const records: RequestDetailRecord[] = [];
@@ -178,9 +193,9 @@ async function flushBatch(
   }
 
   // Insert the batch into DuckDB.
-  if (records.length > 0) {
+  if (connection !== undefined && records.length > 0) {
     await insertRequestDetailRecords(connection, records);
   }
 
-  return { recordsLoaded: records.length, rowsRejected, log };
+  return { recordsLoaded: records.length, rowsRejected, log, records };
 }
