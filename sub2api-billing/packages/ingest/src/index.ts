@@ -18,3 +18,18 @@ export {
   billingMonthFromFolder,
   fillBillingMonthFromFolder,
 } from './folder-scanner.js';
+
+// Ingestion orchestration (Requirements 1.2, 1.4, 1.5, 1.6, 1.7, 21.2, 21.3):
+// scans a billing root, discovers YYYY-MM folders, reads expected CSV files via
+// the parser, records log entries, runs reconciliation and unmatched-reference
+// detection, and produces an IngestionSummary.
+export { runIngestion, EXPECTED_FILES } from './ingestion-orchestrator.js';
+
+// Streaming loader for `request_detail.csv` (Requirement 3.1, task 15.5):
+// reads the file using a streaming reader that processes in bounded batches
+// so peak memory is independent of total row count.
+export { streamRequestDetail, DEFAULT_REQUEST_DETAIL_BATCH_SIZE } from './streaming-loader.js';
+export type {
+  StreamingLoaderOptions,
+  StreamingLoaderResult,
+} from './streaming-loader.js';

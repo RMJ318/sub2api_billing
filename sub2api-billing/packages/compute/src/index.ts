@@ -87,3 +87,57 @@ export {
 // month-end Spend from the observed daily run rate, the days until the aggregate
 // budget is reached, and the over-budget flag, or InsufficientData below 3 days.
 export { forecastMonthEnd } from './forecast.js';
+
+// Reconciliation and unmatched-reference detection (Requirements 21.1, 21.2, 21.3):
+// associate daily records with the monthly summary by user_id + Billing_Month,
+// flag daily-vs-monthly used_usd mismatch > 1%, and detect request-detail
+// api_key_id with no matching Key_Usage_Record while retaining the record.
+export { reconcileDailyToMonthly, detectUnmatchedReferences } from './reconciliation.js';
+export type {
+  ReconciliationDiscrepancy,
+  ReconciliationResult,
+  UnmatchedReference,
+  UnmatchedReferenceResult,
+} from './reconciliation.js';
+
+// Signal Engine (Requirements 16.2, 17.1–17.6): pure detection rules that
+// evaluate daily usage, monthly summaries, and key request counts to produce
+// typed Signal objects with group, severity, message, and navigation target.
+export {
+  detectSignals,
+  detectHighSpend,
+  detectLowBalance,
+  detectApiKeyAnomaly,
+  detectResponseTimeAnomaly,
+  detectRiskHint,
+  unreadCount,
+} from './signals.js';
+export type { DetectSignalsInput } from './signals.js';
+
+// Key health classifiers (Requirements 12.4, 12.5, 12.6): long-unused keys
+// (idle > 14 days before month end), high-frequency keys (top by request count),
+// and abnormal-growth keys (request count up >= 200% vs preceding month).
+export {
+  longUnusedKeys,
+  highFrequencyKeys,
+  abnormalGrowthKeys,
+  classifyKeyHealth,
+  billingMonthEnd,
+} from './key-health.js';
+export type { AbnormalGrowthKey, KeyHealth, KeyHealthInput } from './key-health.js';
+
+// Insight Engine (Requirement 15): pure derivation of top-performer rankings
+// and month-over-month trend insights from Monthly_Summary_Records.
+export { topPerformers, trendInsights } from './insights.js';
+export type { Insight, TopPerformerEntry, TopPerformerRanking } from './insights.js';
+
+// CSV record serializer (Requirements 2.1, 2.2, 2.11): serialize a normalized
+// record to a CSV row under a given ordered header with RFC 4180 quoting for
+// commas, quotes, and newlines. Reusable by the parser round-trip and the
+// Export Service.
+export { serializeCsvRow, serializeCsv } from './csv-serializer.js';
+
+// Export Service (Requirements 20.1, 20.2, 20.3, 20.5): build a downloadable
+// CSV file from the currently filtered page data with a deterministic filename.
+export { buildCsvExport } from './csv-export.js';
+export type { CsvExportRequest, CsvExportResult } from './csv-export.js';

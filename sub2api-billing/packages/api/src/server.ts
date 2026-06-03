@@ -1,3 +1,4 @@
+import { InMemoryRecordStore } from '@core/store';
 import { buildApp } from './app.js';
 
 /**
@@ -10,7 +11,11 @@ const PORT = Number(process.env.PORT ?? 3001);
 const HOST = process.env.HOST ?? '127.0.0.1';
 
 async function main(): Promise<void> {
-  const app = buildApp();
+  // In a production setup this store would be populated by the ingestion service
+  // before the server starts; for now we create an empty store to allow the
+  // server to boot.
+  const store = new InMemoryRecordStore();
+  const app = buildApp({ store });
   await app.listen({ port: PORT, host: HOST });
   // eslint-disable-next-line no-console
   console.log(`API listening on http://${HOST}:${PORT}`);

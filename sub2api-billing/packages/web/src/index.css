@@ -2,3 +2,29 @@
 
 /* Dark-mode-first: the `dark` variant is toggled via a class on <html>. */
 @custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Responsive card grid:
+ * - >= 768px: multi-column grid with visible nav sidebar
+ * - 320px–767px: single-column (nav collapsed via hamburger)
+ * - < 320px: single-column with horizontal scroll for overflowing cards
+ */
+.app-card-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .app-card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+
+/* Enable horizontal scroll for content wider than viewport below 320px */
+@media (max-width: 319px) {
+  .app-card-grid {
+    overflow-x: auto;
+    min-width: max-content;
+  }
+}

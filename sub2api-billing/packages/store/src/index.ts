@@ -44,3 +44,32 @@ export type {
   RequestDetailQueryResult,
   RequestDetailQueryErrorCode,
 } from './query-service.js';
+
+// Aggregate query functions for all pages (Task 17.6, Requirements 3.6, 13.2,
+// 13.3, 21.4): the query service layer between the in-memory record store and
+// the API that wires the pure compute library to serve dashboard KPIs/charts,
+// user/model/key/cost aggregates, insights, and signals from summary record sets
+// and server-side aggregation (never a full client load of `request_detail`).
+// All money is summed in USD with no currency conversion (Decimal as-is).
+export {
+  getDashboardAggregates,
+  getUserAggregates,
+  getUserTrend,
+  getModelAggregates,
+  getKeyAggregates,
+  getCostAggregates,
+  getInsightsAggregates,
+  getSignalAggregates,
+} from './aggregate-queries.js';
+export type {
+  TrendPointDto,
+  DashboardAggregates,
+  UserBudgetEntry,
+  UserAggregates,
+  UserTrendData,
+  ModelAggregates,
+  KeyAggregates,
+  CostAggregates,
+  InsightsAggregates,
+  SignalAggregates,
+} from './aggregate-queries.js';
