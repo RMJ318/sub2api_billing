@@ -124,6 +124,27 @@ describe('@app/api health route', () => {
   });
 });
 
+describe('GET /api/metadata/months', () => {
+  it('returns available billing months in descending order', async () => {
+    const store = buildTestStore();
+    store.load({
+      monthlySummaries: [
+        makeSummary({
+          billing_month: '2026-05',
+          user_id: 'user-2',
+          email: 'user2@example.com',
+          username: 'User Two',
+        }),
+      ],
+    });
+    const app = buildApp({ store });
+    const res = await app.inject({ method: 'GET', url: '/api/metadata/months' });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ months: ['2026-05', '2026-04'] });
+    await app.close();
+  });
+});
+
 describe('GET /api/dashboard', () => {
   it('returns 400 when billingMonth is missing', async () => {
     const store = buildTestStore();
@@ -226,6 +247,31 @@ describe('GET /api/models', () => {
     expect(body.efficiencyScatter).toBeInstanceOf(Array);
     await app.close();
   });
+
+  it('uses the shared model classifier semantics for family grouping inputs', async () => {
+    const store = new InMemoryRecordStore();
+    store.load({
+      monthlySummaries: [makeSummary()],
+      modelUsage: [
+        makeModel({ model: 'gpt-5.5', used_usd: new Decimal('10') }),
+        makeModel({ model: 'claude-3-7-sonnet', used_usd: new Decimal('20') }),
+        makeModel({ model: 'gemini-2.5-pro', used_usd: new Decimal('30') }),
+        makeModel({ model: 'other-model', used_usd: new Decimal('40') }),
+      ],
+    });
+    const app = buildApp({ store });
+    const dashboardRes = await app.inject({
+      method: 'GET',
+      url: '/api/dashboard?billingMonth=2026-04',
+    });
+    expect(dashboardRes.statusCode).toBe(200);
+    const body = dashboardRes.json();
+    expect(body.modelFamilyShare.GPT).toBe('10');
+    expect(body.modelFamilyShare.Claude).toBe('20');
+    expect(body.modelFamilyShare.Gemini).toBe('30');
+    expect(body.modelFamilyShare.Other).toBe('40');
+    await app.close();
+  });
 });
 
 describe('GET /api/keys', () => {
@@ -254,6 +300,40 @@ describe('GET /api/cost', () => {
     expect(body.trend.daily).toBeInstanceOf(Array);
     expect(body.pareto).toBeDefined();
     expect(body.forecast).toBeDefined();
+    await app.close();
+  });
+
+  it('preserves USD values without currency conversion', async () => {
+    const store = new InMemoryRecordStore();
+    store.load({
+      monthlySummaries: [
+        makeSummary({
+          billing_month: '2026-04',
+          used_usd: new Decimal('123.456789'),
+          monthly_limit_usd: new Decimal('1000'),
+        }),
+      ],
+      dailyUsage: [
+        makeDaily({
+          billing_month: '2026-04',
+          used_usd: new Decimal('123.456789'),
+        }),
+      ],
+    });
+    const app = buildApp({ store });
+    const dashboardRes = await app.inject({
+      method: 'GET',
+      url: '/api/dashboard?billingMonth=2026-04',
+    });
+    expect(dashboardRes.statusCode).toBe(200);
+    expect(dashboardRes.json().kpis.totalSpendUsd).toBe('123.456789');
+
+    const costRes = await app.inject({
+      method: 'GET',
+      url: '/api/cost?billingMonth=2026-04',
+    });
+    expect(costRes.statusCode).toBe(200);
+    expect(costRes.json().trend.daily[0].value).toBe('123.456789');
     await app.close();
   });
 });

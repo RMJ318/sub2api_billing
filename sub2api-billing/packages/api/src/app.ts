@@ -177,6 +177,10 @@ export function buildApp(deps?: AppDependencies): FastifyInstance {
 
   const { store, duckDbConnection } = deps;
 
+  app.get('/api/metadata/months', async () => ({
+    months: store.availableMonths().slice().reverse(),
+  }));
+
   // ─── GET /api/dashboard ────────────────────────────────────────────────────
   app.get('/api/dashboard', async (request, reply) => {
     const query = request.query as Record<string, unknown>;
@@ -235,6 +239,59 @@ export function buildApp(deps?: AppDependencies): FastifyInstance {
     }
     const data = getKeyAggregates(store, monthResult.value);
     return shapeDtoDecimals(data);
+  });
+
+  app.get('/api/keys/:apiKeyId/trend', async (request, reply) => {
+    if (!duckDbConnection) {
+      return reply.status(503).send({ error: 'Request detail store is not available.' });
+    }
+
+    const params = request.params as Record<string, string>;
+    const query = request.query as Record<string, unknown>;
+    const monthResult = validateBillingMonth(query.billingMonth);
+    if (!monthResult.valid) {
+      return reply.status(400).send({ error: monthResult.error });
+    }
+
+    const apiKeyId = params.apiKeyId;
+    if (!apiKeyId || apiKeyId.trim() === '') {
+      return reply.status(400).send({ error: 'apiKeyId path parameter is required.' });
+    }
+
+    const result = await queryRequestDetailService(duckDbConnection, {
+      billingMonth: monthResult.value,
+      apiKeyId,
+      pageSize: 1000,
+    });
+
+    if (!result.ok) {
+      return reply.status(400).send({ error: result.error, code: result.code });
+    }
+
+    const byDay = new Map<string, { spend: number; requests: number }>();
+    for (const record of result.page.records) {
+      if (!record.created_at) {
+        continue;
+      }
+      const bucket = record.created_at.toISOString().slice(0, 10);
+      const existing = byDay.get(bucket) ?? { spend: 0, requests: 0 };
+      existing.spend += Number(record.total_cost_usd?.toString() ?? '0');
+      existing.requests += 1;
+      byDay.set(bucket, existing);
+    }
+
+    const points = [...byDay.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([bucket, values]) => ({
+        bucket,
+        spend: values.spend.toString(),
+        requests: values.requests.toString(),
+      }));
+
+    return {
+      spend: points.map((point) => ({ bucket: point.bucket, value: point.spend })),
+      requests: points.map((point) => ({ bucket: point.bucket, value: point.requests })),
+    };
   });
 
   // ─── GET /api/cost ─────────────────────────────────────────────────────────

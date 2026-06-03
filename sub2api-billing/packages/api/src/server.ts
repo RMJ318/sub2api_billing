@@ -1,5 +1,6 @@
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { InMemoryRecordStore, openRequestDetailDb } from '@core/store';
 import { runIngestion, isValidBillingMonthFolder, streamRequestDetail } from '@core/ingest';
 import { buildApp } from './app.js';
@@ -12,7 +13,8 @@ import { buildApp } from './app.js';
  */
 const PORT = Number(process.env.PORT ?? 3001);
 const HOST = process.env.HOST ?? '127.0.0.1';
-const BILLING_ROOT_DIR = process.env.BILLING_ROOT_DIR ?? process.cwd();
+const DEFAULT_BILLING_ROOT_DIR = fileURLToPath(new URL('../../../', import.meta.url));
+const BILLING_ROOT_DIR = process.env.BILLING_ROOT_DIR ?? DEFAULT_BILLING_ROOT_DIR;
 const REQUEST_DETAIL_BATCH_SIZE = Number(process.env.REQUEST_DETAIL_BATCH_SIZE ?? 10_000);
 
 async function findBillingMonthFolders(rootDir: string): Promise<string[]> {
