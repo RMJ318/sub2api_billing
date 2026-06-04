@@ -99,6 +99,18 @@ export interface CostAggregatesResponse {
     weekly: Array<{ bucket: string; value: string }>;
     monthly: Array<{ bucket: string; value: string }>;
   };
+  treemap: Array<{
+    name: string;
+    value?: string;
+    children?: Array<{
+      name: string;
+      value?: string;
+      children?: Array<{
+        name: string;
+        value?: string;
+      }>;
+    }>;
+  }>;
   pareto: {
     top10: number;
     top20: number;
@@ -149,6 +161,13 @@ export interface MonthsResponse {
   months: string[];
 }
 
+export interface ImportCsvResponse {
+  billingMonth: string;
+  fileName: string;
+  recordsLoaded: number;
+  rowsRejected: number;
+}
+
 async function fetchJson<T>(input: string): Promise<T> {
   const response = await fetch(input);
   if (!response.ok) {
@@ -158,7 +177,7 @@ async function fetchJson<T>(input: string): Promise<T> {
 }
 
 export async function fetchHealth(): Promise<{ status: string }> {
-  return fetchJson('/health');
+  return fetchJson('/api/health');
 }
 
 export async function fetchMonths(): Promise<MonthsResponse> {
@@ -221,6 +240,24 @@ export async function fetchSignals(
 ): Promise<SignalAggregatesResponse> {
   const params = new URLSearchParams({ billingMonth });
   return fetchJson(`/api/signals?${params.toString()}`);
+}
+
+export async function importCsvFile(input: {
+  billingMonth: string;
+  fileName: string;
+  csvText: string;
+}): Promise<ImportCsvResponse> {
+  const response = await fetch('/api/import-csv', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+  }
+  return (await response.json()) as ImportCsvResponse;
 }
 
 export function buildExportUrl(pageName: string, billingMonth: string): string {

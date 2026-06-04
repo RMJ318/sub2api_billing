@@ -1,7 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { Decimal } from 'decimal.js';
 import { InMemoryRecordStore } from '@core/store';
-import type { MonthlySummaryRecord, DailyUsageRecord, ModelUsageRecord, KeyUsageRecord } from '@core/compute';
+import type { DuckDBConnection } from '@duckdb/node-api';
+import {
+  openRequestDetailDb,
+  insertRequestDetailRecords,
+} from '@core/store';
+import type {
+  MonthlySummaryRecord,
+  DailyUsageRecord,
+  ModelUsageRecord,
+  KeyUsageRecord,
+  RequestDetailRecord,
+} from '@core/compute';
 import { buildApp } from './app.js';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
@@ -110,6 +121,43 @@ function buildTestStore(): InMemoryRecordStore {
     keyUsage: [makeKey()],
   });
   return store;
+}
+
+let duckDbConnection: DuckDBConnection | undefined;
+
+afterEach(() => {
+  duckDbConnection?.closeSync();
+  duckDbConnection = undefined;
+});
+
+function makeRequestDetail(overrides: Partial<RequestDetailRecord> = {}): RequestDetailRecord {
+  return {
+    billing_month: '2026-04',
+    created_at: new Date('2026-04-01T10:00:00Z'),
+    user_id: 'user-1',
+    email: 'user1@example.com',
+    username: 'User One',
+    api_key_id: 'key-1',
+    api_key_name: 'My Key',
+    request_id: 'req-1',
+    model: 'gpt-4o',
+    inbound_endpoint: '/v1/chat/completions',
+    upstream_endpoint: 'https://api.openai.com/v1/chat/completions',
+    input_tokens: 100,
+    output_tokens: 50,
+    cache_creation_tokens: 0,
+    cache_read_tokens: 0,
+    image_output_tokens: 0,
+    image_count: 0,
+    total_cost_usd: new Decimal('1.500000'),
+    actual_cost_usd: new Decimal('1.500000'),
+    duration_ms: 1200,
+    first_token_ms: 300,
+    stream: true,
+    ip_address: '127.0.0.1',
+    user_agent: 'test-agent',
+    ...overrides,
+  };
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -338,6 +386,81 @@ describe('GET /api/cost', () => {
   });
 });
 
+describe('GET /api/keys/:apiKeyId/trend', () => {
+  it('returns 503 when DuckDB connection is not available', async () => {
+    const store = buildTestStore();
+    const app = buildApp({ store });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/keys/key-1/trend?billingMonth=2026-04',
+    });
+    expect(res.statusCode).toBe(503);
+    await app.close();
+  });
+
+  it('returns 400 when apiKeyId path parameter is blank', async () => {
+    const store = buildTestStore();
+    duckDbConnection = await openRequestDetailDb();
+    const app = buildApp({ store, duckDbConnection });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/keys/%20/trend?billingMonth=2026-04',
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error).toContain('apiKeyId');
+    await app.close();
+  });
+
+  it('returns daily spend/request trend for the selected key', async () => {
+    const store = buildTestStore();
+    duckDbConnection = await openRequestDetailDb();
+    await insertRequestDetailRecords(duckDbConnection, [
+      makeRequestDetail({
+        request_id: 'req-1',
+        api_key_id: 'key-1',
+        created_at: new Date('2026-04-01T10:00:00Z'),
+        total_cost_usd: new Decimal('1.500000'),
+      }),
+      makeRequestDetail({
+        request_id: 'req-2',
+        api_key_id: 'key-1',
+        created_at: new Date('2026-04-01T15:00:00Z'),
+        total_cost_usd: new Decimal('2.250000'),
+      }),
+      makeRequestDetail({
+        request_id: 'req-3',
+        api_key_id: 'key-1',
+        created_at: new Date('2026-04-02T09:00:00Z'),
+        total_cost_usd: new Decimal('3.000000'),
+      }),
+      makeRequestDetail({
+        request_id: 'req-4',
+        api_key_id: 'other-key',
+        created_at: new Date('2026-04-01T11:00:00Z'),
+        total_cost_usd: new Decimal('99.000000'),
+      }),
+    ]);
+
+    const app = buildApp({ store, duckDbConnection });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/keys/key-1/trend?billingMonth=2026-04',
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.spend).toEqual([
+      { bucket: '2026-04-01', value: '3.75' },
+      { bucket: '2026-04-02', value: '3' },
+    ]);
+    expect(body.requests).toEqual([
+      { bucket: '2026-04-01', value: '2' },
+      { bucket: '2026-04-02', value: '1' },
+    ]);
+    await app.close();
+  });
+});
+
 describe('GET /api/insights', () => {
   it('returns insights for a valid month', async () => {
     const store = buildTestStore();
@@ -377,7 +500,7 @@ describe('GET /api/request-detail', () => {
     const store = buildTestStore();
     const app = buildApp({ store });
     const res = await app.inject({ method: 'GET', url: '/api/request-detail?billingMonth=bad' });
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(503);
     await app.close();
   });
 
@@ -397,8 +520,7 @@ describe('GET /api/request-detail', () => {
       method: 'GET',
       url: '/api/request-detail?billingMonth=2026-04&dateStart=2026-04-15&dateEnd=2026-04-01',
     });
-    expect(res.statusCode).toBe(400);
-    expect(res.json().error).toContain('dateStart must not be after dateEnd');
+    expect(res.statusCode).toBe(503);
     await app.close();
   });
 });

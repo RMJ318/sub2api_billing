@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Usage Analytics - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Hanken+Grotesk:wght@600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed-variant": "#004395",
+                    "on-secondary-fixed": "#002113",
+                    "surface-dim": "#0d1322",
+                    "surface-bright": "#33394a",
+                    "secondary-fixed-dim": "#4edea3",
+                    "border-glow": "#334155",
+                    "tertiary-container": "#ca8100",
+                    "warning-yellow": "#FBBF24",
+                    "primary-fixed-dim": "#adc6ff",
+                    "secondary-container": "#00a572",
+                    "on-secondary-fixed-variant": "#005236",
+                    "claude-emerald": "#059669",
+                    "surface-elevated": "#1E293BCC",
+                    "on-tertiary-container": "#3e2400",
+                    "on-error-container": "#ffdad6",
+                    "surface-tint": "#adc6ff",
+                    "on-tertiary-fixed": "#2a1700",
+                    "primary-fixed": "#d8e2ff",
+                    "surface-container-lowest": "#080e1d",
+                    "secondary": "#4edea3",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "on-secondary-container": "#00311f",
+                    "gemini-amber": "#D97706",
+                    "outline-variant": "#424754",
+                    "inverse-primary": "#005ac2",
+                    "error": "#ffb4ab",
+                    "tertiary": "#ffb95f",
+                    "primary": "#adc6ff",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "on-secondary": "#003824",
+                    "tertiary-fixed": "#ffddb8",
+                    "on-surface": "#dde2f8",
+                    "on-surface-variant": "#c2c6d6",
+                    "on-primary": "#002e6a",
+                    "surface-container-highest": "#2f3445",
+                    "inverse-on-surface": "#2a3040",
+                    "gpt-blue": "#00A2FF",
+                    "inverse-surface": "#dde2f8",
+                    "on-tertiary": "#472a00",
+                    "primary-container": "#4d8eff",
+                    "secondary-fixed": "#6ffbbe",
+                    "surface-variant": "#2f3445",
+                    "critical-red": "#EF4444",
+                    "on-primary-fixed": "#001a42",
+                    "on-error": "#690005",
+                    "background": "#0d1322",
+                    "surface-container-high": "#242a3a",
+                    "other-indigo": "#6366F1",
+                    "on-background": "#dde2f8",
+                    "error-container": "#93000a",
+                    "surface-container-low": "#151b2b",
+                    "on-primary-container": "#00285d",
+                    "surface": "#0d1322",
+                    "outline": "#8c909f",
+                    "surface-container": "#191f2f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "card-padding": "20px",
+                    "gutter": "16px",
+                    "container-margin": "24px",
+                    "tight": "4px",
+                    "base": "8px"
+            },
+            "fontFamily": {
+                    "data-mono": ["JetBrains Mono"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "kpi-value": ["Inter"],
+                    "headline-lg-mobile": ["Hanken Grotesk"],
+                    "body-md": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "headline-md": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "kpi-value": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "30px", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "22px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0B1120;
+            color: #dde2f8;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-panel {
+            background: #1E293BCC;
+            backdrop-filter: blur(20px);
+            border: 1px solid #334155;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #424754;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen pb-20">
+<!-- TopAppBar -->
+<header class="fixed top-0 z-50 w-full bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline-variant flex justify-between items-center px-container-margin py-base">
+<div class="flex items-center gap-base">
+<span class="material-symbols-outlined text-primary" data-icon="analytics">analytics</span>
+<h1 class="text-headline-md-mobile font-headline-md-mobile font-bold text-on-surface dark:text-on-surface">Usage Analytics</h1>
+</div>
+<div class="flex items-center gap-4">
+<!-- Month Selector Mobile -->
+<div class="flex items-center gap-2 bg-surface-container-high px-3 py-1 rounded-lg border border-outline-variant">
+<span class="text-label-sm font-label-sm text-on-surface-variant">Oct 2023</span>
+<span class="material-symbols-outlined text-[16px]" data-icon="expand_more">expand_more</span>
+</div>
+<button class="hover:bg-surface-variant/50 transition-colors p-2 rounded-full active:scale-95 duration-100">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
+<!-- Signal Center (Drawer Trigger) -->
+<button class="fixed right-0 top-1/2 -translate-y-1/2 bg-primary text-on-primary py-4 px-1 rounded-l-xl shadow-lg z-40" onclick="toggleDrawer()">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<main class="mt-20 px-container-margin space-y-gutter">
+<!-- KPI Stack -->
+<section class="flex flex-col gap-base">
+<!-- Total Spend -->
+<div class="glass-panel rounded-xl p-card-padding flex items-center justify-between group hover:border-primary transition-all">
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-tight">TOTAL SPEND</p>
+<div class="flex items-baseline gap-2">
+<span class="text-kpi-value font-kpi-value text-primary">$1,240.50</span>
+<span class="text-data-mono font-data-mono text-secondary text-[11px]">+12.5%</span>
+</div>
+</div>
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="payments">payments</span>
+</div>
+</div>
+<!-- Active Users -->
+<div class="glass-panel rounded-xl p-card-padding flex items-center justify-between group hover:border-secondary transition-all">
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-tight">ACTIVE USERS</p>
+<div class="flex items-baseline gap-2">
+<span class="text-kpi-value font-kpi-value text-secondary">42</span>
+<span class="text-data-mono font-data-mono text-critical-red text-[11px]">-2%</span>
+</div>
+</div>
+<div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="person_search">person_search</span>
+</div>
+</div>
+<!-- Total Requests -->
+<div class="glass-panel rounded-xl p-card-padding flex items-center justify-between group hover:border-gpt-blue transition-all">
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-tight">TOTAL REQUESTS</p>
+<div class="flex items-baseline gap-2">
+<span class="text-kpi-value font-kpi-value text-gpt-blue">15.2k</span>
+<span class="text-data-mono font-data-mono text-secondary text-[11px]">+8.1%</span>
+</div>
+</div>
+<div class="w-12 h-12 rounded-full bg-gpt-blue/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-gpt-blue" data-icon="bolt">bolt</span>
+</div>
+</div>
+</section>
+<!-- Charts Grid -->
+<section class="space-y-gutter">
+<!-- Daily Spend Trend -->
+<div class="glass-panel rounded-xl p-card-padding">
+<div class="flex justify-between items-start mb-card-padding">
+<div>
+<h3 class="text-label-sm font-label-sm text-on-surface">Daily Spend Trend</h3>
+<p class="text-[10px] text-on-surface-variant">Last 30 days cost analysis</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="more_vert">more_vert</span>
+</div>
+<div class="h-48 w-full bg-surface-container-low rounded-lg flex items-end justify-between px-2 py-4 relative overflow-hidden">
+<!-- Placeholder Chart Pattern -->
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+<div class="w-full h-full" style="background-image: linear-gradient(0deg, transparent 24%, rgba(173, 198, 255, 0.05) 25%, rgba(173, 198, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(173, 198, 255, 0.05) 75%, rgba(173, 198, 255, 0.05) 76%, transparent 77%, transparent); background-size: 50px 50px;"></div>
+</div>
+<div class="w-1.5 bg-primary-container h-[40%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary-container h-[60%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary-container h-[35%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary-container h-[80%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary-container h-[55%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary h-[90%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary-container h-[45%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary-container h-[65%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary-container h-[30%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary h-[70%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary-container h-[40%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary-container h-[60%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary-container h-[35%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary-container h-[80%] rounded-t-full"></div>
+<div class="w-1.5 bg-primary-container h-[55%] rounded-t-full"></div>
+</div>
+</div>
+<!-- Model Distribution -->
+<div class="glass-panel rounded-xl p-card-padding">
+<h3 class="text-label-sm font-label-sm text-on-surface mb-card-padding">Model Distribution</h3>
+<div class="flex items-center gap-gutter">
+<div class="relative w-32 h-32 flex-shrink-0">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<!-- Gemini 15% -->
+<circle class="text-gemini-amber" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="213.52" stroke-width="12"></circle>
+<!-- Claude 25% -->
+<circle class="text-claude-emerald" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="150.72" stroke-width="12"></circle>
+<!-- GPT 60% -->
+<circle class="text-gpt-blue" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="0" stroke-width="12"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-data-mono font-data-mono text-[16px] text-on-surface">3 Models</span>
+</div>
+</div>
+<div class="flex-grow space-y-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="status-dot bg-gpt-blue"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">GPT</span>
+</div>
+<span class="text-data-mono font-data-mono">60%</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="status-dot bg-claude-emerald"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Claude</span>
+</div>
+<span class="text-data-mono font-data-mono">25%</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="status-dot bg-gemini-amber"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Gemini</span>
+</div>
+<span class="text-data-mono font-data-mono">15%</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Top Spenders List -->
+<section class="glass-panel rounded-xl p-card-padding">
+<div class="flex justify-between items-center mb-card-padding">
+<h3 class="text-label-sm font-label-sm text-on-surface">Top 5 Spenders</h3>
+<button class="text-primary text-[10px] font-bold uppercase">View All</button>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant">
+<img alt="User 1" data-alt="A high-quality 3D rendered avatar icon for a technology user, showcasing a sleek and professional design. The lighting is sophisticated and moody, consistent with a high-performance dark-mode dashboard interface. The style is minimalist yet technologically detailed, using a dark-mode palette of charcoal, indigo, and bright blue accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkbx2WlhNM-bCPvXKsszwT3BtnYwanaeSlSqb9ByZX25PN0_xdZ3qvgIhLA6GVa9eNV1ODJJTRIwh-j4l0yKRuCYZw4S9hGqdeECaLoj6GdFpt-_pnHAn57y9Fa35oJjRGgk0aJJLaS9lkgODXBr4qGidwI4tvqLnHrFo9RmzbpTF2vvyzfRvSaCwE-J_pEKQZ-0GchcPq9gflcoIdSo4EIRI8e3pkNtYotgjFiOJPH31umUJa97EaNkNtpxHJcQibAq0xCNe-R34i"/>
+</div>
+<div>
+<p class="text-body-md font-body-md text-on-surface">A. Henderson</p>
+<p class="text-[10px] text-on-surface-variant">Engineering Team</p>
+</div>
+</div>
+<p class="text-data-mono font-data-mono text-on-surface">$412.30</p>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant">
+<img alt="User 2" data-alt="A minimalist tech professional avatar icon, rendered in a 3D style with soft, ambient lighting for a dark-mode dashboard environment. The color scheme is centered around deep greys and blues with vibrant primary-color highlights to match a futuristic management cockpit aesthetic. High visual clarity and precision are emphasized in the character's design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyZ1uiSAEIiC-AryOF8QCYZ6Paz98D2Pt4U-DVBNwfpi0RrPdT8hC6Ab8XPgmo3yv3PflNuUR5iIETOTTdCzGC9Ua9CMeJsQxS661FrYxtIyEGDP5gB1qdGunDztbAqWZp7VDRxs13GZvumbQuB-9Ewn1sXKDKvnShJ_1KE48Mvr_sm2kMnOwGW7ivp0sy2KM3usyiEQFZxqAI5cp23pkiaeTJqVkBAYv4M8-iZbj06J2NCF-41fi26DcbPvT7GJpMMRciMCQyGmwF"/>
+</div>
+<div>
+<p class="text-body-md font-body-md text-on-surface">Sarah J.</p>
+<p class="text-[10px] text-on-surface-variant">Data Science</p>
+</div>
+</div>
+<p class="text-data-mono font-data-mono text-on-surface">$289.15</p>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant">
+<img alt="User 3" data-alt="A sophisticated and technical-looking profile avatar designed for an enterprise AI analytics platform. The character is portrayed in a professional 3D style, integrated into a dark-mode theme with high-contrast accent colors like vibrant emerald. The mood is proactive and authoritative, fitting for a user in a management cockpit." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5RdrDdiTgHCVuyopGJQh1OmXNoieBj3Cn7qGYyXMqoPvbC7KIP8dLrSoyhu85N7nrGNMhwUW_h_trXvkcHWvk3nr7124JuBUIrViLJI527dqtnxQYUTIzaCFGd9upExoQDzkpB_HvSyBOM2k_hawxeA4hFS72VP60cXFft7nIZ8AD5p8kRfkYwGndxJsNFkec3AmIJCd-vacm4EI4l_ywycmN8GDt3s6cJZpMz7jIn0KYpG7Cx3kzXMz4p--Cq6h6Jpfr1JMTd3YV"/>
+</div>
+<div>
+<p class="text-body-md font-body-md text-on-surface">Mark Taylor</p>
+<p class="text-[10px] text-on-surface-variant">Product Marketing</p>
+</div>
+</div>
+<p class="text-data-mono font-data-mono text-on-surface">$195.40</p>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant">
+<img alt="User 4" data-alt="A clean, modern 3D avatar design of a tech team member. The avatar is illuminated by soft, futuristic lighting within a dark indigo background space, aligning with a corporate AI analytics dashboard. The style uses a refined palette of blacks, whites, and electric blue, conveying technical precision and professional reliability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2Gpx_ebTGmXI4KTTLApFBrZR2mNcw3hTU1ZvcTcwUnIoOTNoF4sMNBGF1oaV8QTlRP4BB1DkfROuGZRKQ6FEKsytTIYDSECoUOdNIFP1J6k2CS2b40mn06Yl6SLl5DnyzkafupY9-NeuATue5bQRVjbQsnKpmz-HoxePXWQfMyqk9QQOtJ6lwryo8KRyfGBloCgXkFtDSRDm_w4rNF6_vuI-mjMUHT3iECI05p-IY9KF6AIi3n-3oHtOLe2ZAQibeN2hiK5_QCVQZ"/>
+</div>
+<div>
+<p class="text-body-md font-body-md text-on-surface">Emily Chen</p>
+<p class="text-[10px] text-on-surface-variant">QA Specialist</p>
+</div>
+</div>
+<p class="text-data-mono font-data-mono text-on-surface">$162.80</p>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant">
+<img alt="User 5" data-alt="A futuristic professional avatar illustration featuring a minimalist 3D character in a technology-focused environment. The lighting and color palette are optimized for a dark-mode UI, featuring subtle glowing borders and deep tonal layering. The aesthetic is authoritative and technical, reflecting the advanced nature of the AI cost management industry." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCox1qGFZMECuspVGPf3ZjvD7wcv6NAQMGaAyOEF4trx1ILQ78wNX5cRrNmumx08BSIJxV4ebnv3zEoWvNEjRtjmjILgs5yh8uilTXH1s9YtveCZPzXulwfqGmx4n8FSUoIVCrq2pWujpTnVj2MFpej0CYx8j713H579OHuqtSNzAFJim_F3owfWD7iN6QRPishrm5KJHSbvFQkyB2J7Ug7oi5v5i_ukr1--IUSx95jtVaRWBoZ6DE3_M7sAdM2MCnsKd7BV5BpOTxg"/>
+</div>
+<div>
+<p class="text-body-md font-body-md text-on-surface">David Wilson</p>
+<p class="text-[10px] text-on-surface-variant">DevOps</p>
+</div>
+</div>
+<p class="text-data-mono font-data-mono text-on-surface">$110.05</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Signal Center Drawer -->
+<div class="fixed inset-y-0 right-0 w-full md:w-[400px] z-[60] glass-panel transition-transform translate-x-full shadow-2xl flex flex-col h-full p-card-padding" id="signalDrawer">
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="signal_cellular_alt">signal_cellular_alt</span>
+<h2 class="text-headline-sm-mobile font-headline-sm-mobile text-on-surface">Signal Center</h2>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center" onclick="toggleDrawer()">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<div class="space-y-4 custom-scrollbar overflow-y-auto flex-grow pr-2">
+<!-- Signal Entry 1 -->
+<div class="p-4 rounded-lg bg-error-container/20 border border-critical-red/30 flex gap-4 items-start">
+<span class="material-symbols-outlined text-critical-red mt-1" data-icon="error">error</span>
+<div>
+<h4 class="text-label-sm font-label-sm text-on-error-container font-bold">Critical Alerts</h4>
+<p class="text-body-md text-on-surface-variant text-[12px] leading-snug">Spike in GPT-4 tokens detected from Unknown IP. Immediate action required.</p>
+</div>
+</div>
+<!-- Signal Entry 2 -->
+<div class="p-4 rounded-lg bg-warning-yellow/10 border border-warning-yellow/30 flex gap-4 items-start">
+<span class="material-symbols-outlined text-warning-yellow mt-1" data-icon="warning">warning</span>
+<div>
+<h4 class="text-label-sm font-label-sm text-on-surface font-bold">Budget Risk</h4>
+<p class="text-body-md text-on-surface-variant text-[12px] leading-snug">Claude usage is at 85% of monthly projected budget allocation.</p>
+</div>
+</div>
+<!-- Signal Entry 3 -->
+<div class="p-4 rounded-lg bg-surface-variant border border-outline-variant flex gap-4 items-start">
+<span class="material-symbols-outlined text-primary mt-1" data-icon="query_stats">query_stats</span>
+<div>
+<h4 class="text-label-sm font-label-sm text-on-surface font-bold">Anomaly Detected</h4>
+<p class="text-body-md text-on-surface-variant text-[12px] leading-snug">Unusual behavior from Model GPT-3.5-Turbo in Production environment.</p>
+</div>
+</div>
+<!-- Signal Entry 4 -->
+<div class="p-4 rounded-lg bg-surface-variant border border-outline-variant flex gap-4 items-start">
+<span class="material-symbols-outlined text-secondary mt-1" data-icon="trending_up">trending_up</span>
+<div>
+<h4 class="text-label-sm font-label-sm text-on-surface font-bold">Usage Spike</h4>
+<p class="text-body-md text-on-surface-variant text-[12px] leading-snug">Engineering team increased usage by 40% in the last 2 hours.</p>
+</div>
+</div>
+</div>
+<button class="mt-auto w-full py-3 bg-primary text-on-primary rounded-lg font-bold text-label-sm flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="history">history</span>
+            Audit Signal History
+        </button>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container dark:bg-surface-container border-t border-outline-variant dark:border-outline-variant shadow-lg flex justify-around items-center h-16 px-2">
+<button class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-90 duration-150 transition-all">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-label-sm font-label-sm">Dash</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+<span class="text-label-sm font-label-sm">Users</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined" data-icon="view_in_ar">view_in_ar</span>
+<span class="text-label-sm font-label-sm">Models</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+<span class="text-label-sm font-label-sm">Keys</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="text-label-sm font-label-sm">Costs</span>
+</button>
+</nav>
+<script>
+        function toggleDrawer() {
+            const drawer = document.getElementById('signalDrawer');
+            drawer.classList.toggle('translate-x-full');
+        }
+
+        // Add some subtle atmospheric effects
+        document.addEventListener('mousemove', (e) => {
+            const panels = document.querySelectorAll('.glass-panel');
+            const x = e.clientX;
+            const y = e.clientY;
+
+            panels.forEach(panel => {
+                const rect = panel.getBoundingClientRect();
+                if (x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
+                    const localX = x - rect.left;
+                    const localY = y - rect.top;
+                    panel.style.background = `radial-gradient(circle at ${localX}px ${localY}px, rgba(173, 198, 255, 0.08) 0%, #1E293BCC 80%)`;
+                } else {
+                    panel.style.background = '#1E293BCC';
+                }
+            });
+        });
+    </script>
+</body></html>

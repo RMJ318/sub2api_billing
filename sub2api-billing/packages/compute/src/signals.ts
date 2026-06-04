@@ -89,7 +89,8 @@ export function detectHighSpend(
     if (rec.used_usd === null) continue;
 
     const threshold = limit.mul(0.2);
-    if (rec.used_usd.gt(threshold)) {
+    const epsilon = new (limit.constructor as typeof Decimal)('1e-12');
+    if (rec.used_usd.minus(threshold).gt(epsilon)) {
       const dateStr = formatDate(rec.usage_date);
       signals.push({
         id: signalId('high_spend', rec.user_id, dateStr),

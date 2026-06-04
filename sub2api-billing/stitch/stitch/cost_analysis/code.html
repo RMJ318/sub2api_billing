@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cost Analysis | AI Management Cockpit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "critical-red": "#EF4444",
+                      "primary-container": "#4d8eff",
+                      "on-primary-container": "#00285d",
+                      "surface": "#0d1322",
+                      "on-primary-fixed-variant": "#004395",
+                      "primary": "#adc6ff",
+                      "inverse-primary": "#005ac2",
+                      "on-secondary-fixed-variant": "#005236",
+                      "gemini-amber": "#D97706",
+                      "error": "#ffb4ab",
+                      "warning-yellow": "#FBBF24",
+                      "surface-dim": "#0d1322",
+                      "surface-elevated": "#1E293BCC",
+                      "tertiary-container": "#ca8100",
+                      "on-primary-fixed": "#001a42",
+                      "secondary-fixed-dim": "#4edea3",
+                      "border-glow": "#334155",
+                      "on-secondary-container": "#00311f",
+                      "on-tertiary-fixed": "#2a1700",
+                      "on-surface": "#dde2f8",
+                      "on-tertiary-fixed-variant": "#653e00",
+                      "surface-container-lowest": "#080e1d",
+                      "on-secondary": "#003824",
+                      "error-container": "#93000a",
+                      "primary-fixed-dim": "#adc6ff",
+                      "secondary-fixed": "#6ffbbe",
+                      "primary-fixed": "#d8e2ff",
+                      "surface-container-low": "#151b2b",
+                      "on-primary": "#002e6a",
+                      "surface-tint": "#adc6ff",
+                      "tertiary-fixed": "#ffddb8",
+                      "surface-container-high": "#242a3a",
+                      "on-secondary-fixed": "#002113",
+                      "on-error-container": "#ffdad6",
+                      "inverse-surface": "#dde2f8",
+                      "other-indigo": "#6366F1",
+                      "on-error": "#690005",
+                      "surface-container": "#191f2f",
+                      "surface-bright": "#33394a",
+                      "tertiary-fixed-dim": "#ffb95f",
+                      "outline-variant": "#424754",
+                      "background": "#0d1322",
+                      "secondary": "#4edea3",
+                      "on-background": "#dde2f8",
+                      "on-tertiary-container": "#3e2400",
+                      "claude-emerald": "#059669",
+                      "inverse-on-surface": "#2a3040",
+                      "secondary-container": "#00a572",
+                      "surface-variant": "#2f3445",
+                      "outline": "#8c909f",
+                      "on-surface-variant": "#c2c6d6",
+                      "surface-container-highest": "#2f3445",
+                      "on-tertiary": "#472a00",
+                      "gpt-blue": "#00A2FF",
+                      "tertiary": "#ffb95f"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "card-padding": "20px",
+                      "tight": "4px",
+                      "container-margin": "24px",
+                      "gutter": "16px",
+                      "base": "8px"
+              },
+              "fontFamily": {
+                      "headline-md": ["Hanken Grotesk"],
+                      "data-mono": ["JetBrains Mono"],
+                      "kpi-value": ["Inter"],
+                      "headline-lg": ["Hanken Grotesk"],
+                      "label-sm": ["Inter"],
+                      "headline-lg-mobile": ["Hanken Grotesk"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                      "kpi-value": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "30px", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "22px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0d1322;
+            color: #dde2f8;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: #1E293BCC;
+            backdrop-filter: blur(12px);
+            border: 1px solid #334155;
+            transition: border-color 0.2s ease;
+        }
+        .glass-card:hover {
+            border-color: #adc6ff;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen pb-20 md:pb-0">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 z-50 bg-surface border-b border-outline-variant flex justify-between items-center w-full px-container-margin py-base">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="analytics">analytics</span>
+<h1 class="text-headline-md font-headline-md font-bold text-on-surface">Usage Analytics</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="hover:bg-surface-variant/50 transition-colors p-2 rounded-full active:scale-95 duration-100">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="search">search</span>
+</button>
+<button class="hover:bg-surface-variant/50 transition-colors p-2 rounded-full active:scale-95 duration-100 relative">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-critical-red rounded-full"></span>
+</button>
+</div>
+</header>
+<main class="max-w-[1600px] mx-auto p-container-margin">
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Main Trend Chart (High Area) -->
+<div class="md:col-span-8 glass-card rounded-xl p-card-padding flex flex-col h-[400px]">
+<div class="flex justify-between items-start mb-4">
+<div>
+<p class="text-label-sm font-label-sm uppercase text-outline">Cost Velocity</p>
+<h2 class="text-headline-md font-headline-md text-on-surface">Trend Analysis</h2>
+</div>
+<div class="flex bg-surface-container rounded-lg p-1">
+<button class="px-3 py-1 text-label-sm font-label-sm bg-primary-container text-on-primary-container rounded-md">Hourly</button>
+<button class="px-3 py-1 text-label-sm font-label-sm text-on-surface-variant hover:text-on-surface">Daily</button>
+<button class="px-3 py-1 text-label-sm font-label-sm text-on-surface-variant hover:text-on-surface">Monthly</button>
+</div>
+</div>
+<div class="flex-grow w-full" id="costTrendChart"></div>
+<div class="mt-4 pt-4 border-t border-outline-variant flex gap-6">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-gpt-blue"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">GPT-4o</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-claude-emerald"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Claude 3.5</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-gemini-amber"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Gemini 1.5</span>
+</div>
+</div>
+</div>
+<!-- Month-End Forecast Card -->
+<div class="md:col-span-4 glass-card rounded-xl p-card-padding flex flex-col relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4">
+<span class="material-symbols-outlined text-critical-red animate-pulse" data-icon="warning" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<p class="text-label-sm font-label-sm uppercase text-outline">Projection</p>
+<h2 class="text-headline-md font-headline-md text-on-surface mb-6">Month-End Forecast</h2>
+<div class="flex flex-col gap-6 mb-8">
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-1">Estimated Spend</p>
+<p class="text-kpi-value font-kpi-value text-primary font-data-mono">$12,482.90</p>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-1">Budget Burn Rate</p>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-critical-red h-full" style="width: 82%"></div>
+</div>
+<div class="flex justify-between mt-2">
+<span class="text-label-sm font-label-sm text-critical-red">82% of Monthly Limit</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Limit: $15k</span>
+</div>
+</div>
+</div>
+<div class="bg-critical-red/10 border border-critical-red/20 rounded-lg p-3 mt-auto">
+<p class="text-label-sm font-label-sm text-critical-red font-bold flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="error">error</span> 
+                        BUDGET RISK DETECTED
+                    </p>
+<p class="text-body-md font-body-md text-on-surface-variant leading-tight">
+                        Based on current velocity, you will exceed the allocated budget by June 26th. Recommend disabling high-token agents.
+                    </p>
+</div>
+</div>
+<!-- Treemap Breakdown -->
+<div class="md:col-span-8 glass-card rounded-xl p-card-padding flex flex-col h-[500px]">
+<div class="flex justify-between items-center mb-4">
+<div>
+<p class="text-label-sm font-label-sm uppercase text-outline">Composition</p>
+<h2 class="text-headline-md font-headline-md text-on-surface">Hierarchical Breakdown</h2>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="text-label-sm font-label-sm">User → Model → Key</span>
+<span class="material-symbols-outlined" data-icon="info">info</span>
+</div>
+</div>
+<div class="flex-grow w-full" id="costTreemap"></div>
+</div>
+<!-- Pareto Analysis Panel -->
+<div class="md:col-span-4 glass-card rounded-xl p-card-padding flex flex-col h-[500px]">
+<p class="text-label-sm font-label-sm uppercase text-outline">Top Spend Shares</p>
+<h2 class="text-headline-md font-headline-md text-on-surface mb-4">Pareto Analysis</h2>
+<div class="flex-grow overflow-y-auto hide-scrollbar space-y-4">
+<!-- Top Users List -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center font-data-mono text-primary">01</div>
+<div>
+<p class="text-body-md font-body-md font-bold">Product Dev Team</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant">42.4% of total spend</p>
+</div>
+</div>
+<p class="font-data-mono text-on-surface">$5,292.12</p>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center font-data-mono text-on-surface-variant">02</div>
+<div>
+<p class="text-body-md font-body-md font-bold">Marketing Automation</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant">28.1% of total spend</p>
+</div>
+</div>
+<p class="font-data-mono text-on-surface">$3,507.62</p>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center font-data-mono text-on-surface-variant">03</div>
+<div>
+<p class="text-body-md font-body-md font-bold">Customer Support AI</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant">15.5% of total spend</p>
+</div>
+</div>
+<p class="font-data-mono text-on-surface">$1,934.84</p>
+</div>
+</div>
+<div class="h-32 w-full mt-4" id="paretoMiniChart"></div>
+<div class="bg-surface-container-low rounded-lg p-3">
+<p class="text-label-sm font-label-sm text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary" data-icon="lightbulb">lightbulb</span> 
+                            Spend Insight
+                        </p>
+<p class="text-body-md font-body-md mt-1 italic">
+                            Top 3 entities account for 86% of total operational costs. Focus optimization efforts here.
+                        </p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- NavigationDrawer (Signal Center) -->
+<aside class="fixed inset-y-0 right-0 w-full md:w-[400px] z-[60] bg-surface-elevated backdrop-blur-xl border-l border-border-glow shadow-2xl translate-x-full transition-transform duration-300 ease-in-out flex flex-col p-card-padding" id="signalCenter">
+<div class="flex justify-between items-center mb-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="hub">hub</span>
+<h3 class="text-headline-sm-mobile font-headline-sm-mobile font-bold text-on-surface">Signal Center</h3>
+</div>
+<button class="p-2 hover:bg-surface-variant rounded-full transition-colors" onclick="toggleSignalCenter()">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<div class="space-y-4 overflow-y-auto hide-scrollbar flex-grow">
+<!-- Critical Alert -->
+<div class="p-4 bg-critical-red/10 border-l-4 border-critical-red rounded-r-lg group hover:brightness-110 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-sm font-label-sm font-bold text-critical-red uppercase tracking-widest">Critical Alert</span>
+<span class="text-label-sm font-label-sm text-outline">2m ago</span>
+</div>
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-critical-red" data-icon="error">error</span>
+<div>
+<p class="font-bold text-on-surface">Usage Spike Detected</p>
+<p class="text-body-md text-on-surface-variant">API Key `dev-admin-8x` just tripled its usual token velocity in 5 minutes.</p>
+</div>
+</div>
+</div>
+<!-- Budget Risk -->
+<div class="p-4 bg-warning-yellow/10 border-l-4 border-warning-yellow rounded-r-lg group hover:brightness-110 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-sm font-label-sm font-bold text-warning-yellow uppercase tracking-widest">Budget Risk</span>
+<span class="text-label-sm font-label-sm text-outline">1h ago</span>
+</div>
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-warning-yellow" data-icon="warning">warning</span>
+<div>
+<p class="font-bold text-on-surface">Threshold Crossed</p>
+<p class="text-body-md text-on-surface-variant">Production budget for 'Gemini-1.5' has reached 90% of allocated quota.</p>
+</div>
+</div>
+</div>
+<!-- Anomaly -->
+<div class="p-4 bg-primary-container/10 border-l-4 border-primary-container rounded-r-lg group hover:brightness-110 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-sm font-label-sm font-bold text-primary-container uppercase tracking-widest">Anomaly Detected</span>
+<span class="text-label-sm font-label-sm text-outline">3h ago</span>
+</div>
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary-container" data-icon="query_stats">query_stats</span>
+<div>
+<p class="font-bold text-on-surface">Latency vs Cost Outlier</p>
+<p class="text-body-md text-on-surface-variant">Unusually high cost for low latency responses in region `us-east-1`.</p>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full py-3 bg-surface-variant text-on-surface font-bold rounded-lg mt-6 hover:brightness-110 transition-all active:scale-95">
+            Dismiss All Signals
+        </button>
+</aside>
+<!-- FAB -->
+<button class="fixed bottom-24 right-6 md:bottom-8 md:right-8 w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform active:scale-95 z-40" onclick="toggleSignalCenter()">
+<span class="material-symbols-outlined" data-icon="emergency_home" style="font-variation-settings: 'FILL' 1;">emergency_home</span>
+</button>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full h-16 bg-surface-container border-t border-outline-variant rounded-t-xl z-50 flex justify-around items-center px-2 shadow-lg">
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-150">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-label-sm font-label-sm">Dash</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-3 py-1 active:scale-90 duration-150">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="text-label-sm font-label-sm">Costs</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-150">
+<span class="material-symbols-outlined" data-icon="view_in_ar">view_in_ar</span>
+<span class="text-label-sm font-label-sm">Models</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-150">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+<span class="text-label-sm font-label-sm">Keys</span>
+</div>
+</nav>
+<script>
+        function toggleSignalCenter() {
+            const drawer = document.getElementById('signalCenter');
+            drawer.classList.toggle('translate-x-full');
+        }
+
+        // Initialize ECharts
+        document.addEventListener('DOMContentLoaded', () => {
+            const chartDom = document.getElementById('costTrendChart');
+            const myChart = echarts.init(chartDom, 'dark');
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'axis', backgroundColor: '#1E293B', borderColor: '#334155', textStyle: { color: '#dde2f8' } },
+                grid: { top: '10%', left: '3%', right: '3%', bottom: '5%', containLabel: true },
+                xAxis: { 
+                    type: 'category', 
+                    data: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '23:59'],
+                    axisLine: { lineStyle: { color: '#424754' } },
+                    axisLabel: { color: '#8c909f', fontFamily: 'JetBrains Mono' }
+                },
+                yAxis: { 
+                    type: 'value',
+                    splitLine: { lineStyle: { color: '#424754', type: 'dashed' } },
+                    axisLabel: { color: '#8c909f', fontFamily: 'JetBrains Mono' }
+                },
+                series: [
+                    {
+                        name: 'GPT-4o',
+                        type: 'line',
+                        smooth: true,
+                        data: [120, 132, 101, 134, 90, 230, 210],
+                        color: '#00A2FF',
+                        lineStyle: { width: 3 },
+                        areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{offset: 0, color: '#00A2FF44'}, {offset: 1, color: '#00A2FF00'}]) }
+                    },
+                    {
+                        name: 'Claude 3.5',
+                        type: 'line',
+                        smooth: true,
+                        data: [80, 72, 91, 54, 110, 130, 150],
+                        color: '#059669',
+                        lineStyle: { width: 3 },
+                        areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{offset: 0, color: '#05966944'}, {offset: 1, color: '#05966900'}]) }
+                    }
+                ]
+            };
+            myChart.setOption(option);
+
+            // Treemap
+            const treemapDom = document.getElementById('costTreemap');
+            const treemapChart = echarts.init(treemapDom, 'dark');
+            const treemapOption = {
+                backgroundColor: 'transparent',
+                series: [{
+                    type: 'treemap',
+                    data: [
+                        { name: 'Dev Team', value: 40, children: [
+                            { name: 'GPT-4o', value: 25 },
+                            { name: 'Claude', value: 15 }
+                        ]},
+                        { name: 'Marketing', value: 30, children: [
+                            { name: 'DALL-E 3', value: 20 },
+                            { name: 'GPT-3.5', value: 10 }
+                        ]},
+                        { name: 'Support', value: 15 },
+                        { name: 'Research', value: 10 },
+                        { name: 'Others', value: 5 }
+                    ],
+                    label: { show: true, formatter: '{b}' },
+                    itemStyle: { borderColor: '#0d1322', borderWidth: 2, gapWidth: 2 },
+                    levels: [
+                        { itemStyle: { gapWidth: 1 }, upperLabel: { show: true, height: 30 } },
+                        { itemStyle: { gapWidth: 1 } }
+                    ],
+                    breadcrumb: { show: false }
+                }]
+            };
+            treemapChart.setOption(treemapOption);
+
+            // Pareto Mini
+            const paretoDom = document.getElementById('paretoMiniChart');
+            const paretoChart = echarts.init(paretoDom, 'dark');
+            const paretoOption = {
+                backgroundColor: 'transparent',
+                grid: { left: 0, right: 0, top: 0, bottom: 0 },
+                xAxis: { show: false, type: 'category', data: ['A', 'B', 'C', 'D', 'E'] },
+                yAxis: { show: false, type: 'value' },
+                series: [{
+                    data: [120, 200, 150, 80, 70],
+                    type: 'bar',
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#adc6ff' },
+                            { offset: 1, color: '#005ac2' }
+                        ]),
+                        borderRadius: [4, 4, 0, 0]
+                    }
+                }]
+            };
+            paretoChart.setOption(paretoOption);
+
+            window.addEventListener('resize', () => {
+                myChart.resize();
+                treemapChart.resize();
+                paretoChart.resize();
+            });
+        });
+    </script>
+</body></html>

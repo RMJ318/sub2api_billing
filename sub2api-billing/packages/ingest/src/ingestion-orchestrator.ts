@@ -151,7 +151,12 @@ export async function runIngestion(
   // Step 3-5: Process each billing folder.
   for (const folderName of billingFolders) {
     const folderPath = join(config.billingRootDir, folderName);
-    const folderResult = await processFolder(folderPath, folderName, log);
+    const folderResult = await processFolder(
+      folderPath,
+      folderName,
+      log,
+      config.requestDetailBatchSize,
+    );
 
     if (folderResult === null) {
       // Skipped folder — already logged inside processFolder.
@@ -209,6 +214,7 @@ async function processFolder(
   folderPath: string,
   folderName: string,
   parentLog: IngestionLogEntry[],
+  requestDetailBatchSize: number,
 ): Promise<FolderIngestionResult | null> {
   // Determine which of the five expected files exist in this folder.
   const presentFiles: string[] = [];
@@ -258,7 +264,7 @@ async function processFolder(
       const streamResult = await streamRequestDetail({
         filePath,
         folderName,
-        batchSize: config.requestDetailBatchSize,
+        batchSize: requestDetailBatchSize,
         collectRecords: true,
       });
 

@@ -3,6 +3,7 @@ import type { DuckDBConnection } from '@duckdb/node-api';
 import { Decimal } from 'decimal.js';
 import type { InMemoryRecordStore } from '@core/store';
 import {
+  insertRequestDetailRecords,
   getDashboardAggregates,
   getUserAggregates,
   getUserTrend,
@@ -16,8 +17,18 @@ import {
 import type {
   RequestDetailQueryInput,
 } from '@core/store';
-import { isValidDateRange, buildCsvExport } from '@core/compute';
+import {
+  isValidDateRange,
+  buildCsvExport,
+  parseCsv,
+  monthlySummarySchema,
+  dailyUsageSchema,
+  modelUsageSchema,
+  keyUsageSchema,
+  requestDetailSchema,
+} from '@core/compute';
 import type { RequestDetailSortBy, SortDir } from '@core/compute';
+import { fillBillingMonthFromFolder } from '@core/ingest';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Validation helpers
@@ -147,6 +158,20 @@ export interface AppDependencies {
   duckDbConnection?: DuckDBConnection;
 }
 
+interface CostTreemapNode {
+  name: string;
+  value?: string;
+  children?: CostTreemapNode[];
+}
+
+const IMPORTABLE_FILE_NAMES = new Set([
+  'monthly_user_summary.csv',
+  'daily_user_usage.csv',
+  'model_user_usage.csv',
+  'api_key_usage.csv',
+  'request_detail.csv',
+]);
+
 /**
  * Builds the Fastify application instance with all analytics API routes.
  *
@@ -168,6 +193,7 @@ export function buildApp(deps?: AppDependencies): FastifyInstance {
 
   // ─── Health ────────────────────────────────────────────────────────────────
   app.get('/health', async () => ({ status: 'ok' }));
+  app.get('/api/health', async () => ({ status: 'ok' }));
 
   // If no dependencies provided, return the bare app (for backward compat with
   // existing test that only checks /health).
@@ -180,6 +206,79 @@ export function buildApp(deps?: AppDependencies): FastifyInstance {
   app.get('/api/metadata/months', async () => ({
     months: store.availableMonths().slice().reverse(),
   }));
+
+  app.post('/api/import-csv', async (request, reply) => {
+    const body = (request.body ?? {}) as Record<string, unknown>;
+    const monthResult = validateBillingMonth(body.billingMonth);
+    if (!monthResult.valid) {
+      return reply.status(400).send({ error: monthResult.error });
+    }
+
+    const fileName = typeof body.fileName === 'string' ? body.fileName.trim() : '';
+    if (!IMPORTABLE_FILE_NAMES.has(fileName)) {
+      return reply.status(400).send({
+        error:
+          'fileName must be one of monthly_user_summary.csv, daily_user_usage.csv, model_user_usage.csv, api_key_usage.csv, request_detail.csv.',
+      });
+    }
+
+    const csvText = typeof body.csvText === 'string' ? body.csvText : '';
+    if (csvText.trim() === '') {
+      return reply.status(400).send({ error: 'csvText is required.' });
+    }
+
+    const schema =
+      fileName === 'monthly_user_summary.csv'
+        ? monthlySummarySchema
+        : fileName === 'daily_user_usage.csv'
+          ? dailyUsageSchema
+          : fileName === 'model_user_usage.csv'
+            ? modelUsageSchema
+            : fileName === 'api_key_usage.csv'
+              ? keyUsageSchema
+              : requestDetailSchema;
+
+    const parseResult = parseCsv(csvText, schema);
+    const normalizedRecords = parseResult.records.map((record) => {
+      const candidate = record as { billing_month?: string | null };
+      if (candidate.billing_month == null) {
+        candidate.billing_month = '';
+      }
+      return fillBillingMonthFromFolder(
+        candidate as { billing_month: string },
+        monthResult.value,
+      );
+    });
+
+    if (fileName === 'request_detail.csv') {
+      if (!duckDbConnection) {
+        return reply.status(503).send({ error: 'Request detail store is not available.' });
+      }
+      await insertRequestDetailRecords(duckDbConnection, normalizedRecords as never[]);
+    } else {
+      switch (fileName) {
+        case 'monthly_user_summary.csv':
+          store.load({ monthlySummaries: normalizedRecords as never[] });
+          break;
+        case 'daily_user_usage.csv':
+          store.load({ dailyUsage: normalizedRecords as never[] });
+          break;
+        case 'model_user_usage.csv':
+          store.load({ modelUsage: normalizedRecords as never[] });
+          break;
+        case 'api_key_usage.csv':
+          store.load({ keyUsage: normalizedRecords as never[] });
+          break;
+      }
+    }
+
+    return {
+      billingMonth: monthResult.value,
+      fileName,
+      recordsLoaded: normalizedRecords.length,
+      rowsRejected: parseResult.rows.filter((row) => row.failures.length > 0).length,
+    };
+  });
 
   // ─── GET /api/dashboard ────────────────────────────────────────────────────
   app.get('/api/dashboard', async (request, reply) => {
@@ -302,7 +401,10 @@ export function buildApp(deps?: AppDependencies): FastifyInstance {
       return reply.status(400).send({ error: monthResult.error });
     }
     const data = getCostAggregates(store, monthResult.value);
-    return shapeDtoDecimals(data);
+    const treemap = duckDbConnection
+      ? await buildCostTreemap(duckDbConnection, monthResult.value)
+      : [];
+    return shapeDtoDecimals({ ...data, treemap });
   });
 
   // ─── GET /api/insights ─────────────────────────────────────────────────────
@@ -504,4 +606,83 @@ function getExportData(
       return { columns: [], rows: [] };
     }
   }
+}
+
+async function buildCostTreemap(
+  connection: DuckDBConnection,
+  billingMonth: string,
+): Promise<CostTreemapNode[]> {
+  const reader = await connection.runAndReadAll(
+    `SELECT
+       user_id,
+       COALESCE(NULLIF(username, ''), NULLIF(email, ''), user_id) AS user_label,
+       COALESCE(model, 'Unknown') AS model_label,
+       api_key_id,
+       COALESCE(NULLIF(api_key_name, ''), api_key_id) AS api_key_label,
+       SUM(total_cost_usd) AS spend
+     FROM request_detail
+     WHERE billing_month = $billingMonth
+     GROUP BY 1, 2, 3, 4, 5
+     ORDER BY spend DESC`,
+    { billingMonth },
+  );
+
+  const userMap = new Map<
+    string,
+    {
+      name: string;
+      total: number;
+      models: Map<
+        string,
+        {
+          name: string;
+          total: number;
+          keys: CostTreemapNode[];
+        }
+      >;
+    }
+  >();
+
+  for (const row of reader.getRowObjects() as Array<Record<string, unknown>>) {
+    const userId = String(row.user_id);
+    const userLabel = String(row.user_label);
+    const modelLabel = String(row.model_label);
+    const apiKeyLabel = String(row.api_key_label);
+    const spend = Number(String(row.spend ?? '0'));
+
+    const userEntry =
+      userMap.get(userId) ??
+      {
+        name: userLabel,
+        total: 0,
+        models: new Map(),
+      };
+    userEntry.total += spend;
+
+    const modelEntry =
+      userEntry.models.get(modelLabel) ??
+      {
+        name: modelLabel,
+        total: 0,
+        keys: [],
+      };
+    modelEntry.total += spend;
+    modelEntry.keys.push({
+      name: apiKeyLabel,
+      value: spend.toString(),
+    });
+
+    userEntry.models.set(modelLabel, modelEntry);
+    userMap.set(userId, userEntry);
+  }
+
+  return [...userMap.values()].map((userEntry) => ({
+    name: userEntry.name,
+    value: userEntry.total.toString(),
+    children: [...userEntry.models.values()].map((modelEntry) => ({
+      name: modelEntry.name,
+      value: modelEntry.total.toString(),
+      children: modelEntry.keys,
+    })),
+  }));
 }

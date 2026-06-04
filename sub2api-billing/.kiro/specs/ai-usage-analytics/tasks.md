@@ -341,28 +341,28 @@ Property-based tests (Properties 1–43 from the design) are placed as sub-tasks
     - Wire the pure compute library to serve dashboard KPIs/charts, user/model/key/cost aggregates, insights, and signals from summary record sets / server-side aggregation (never a full client load of `request_detail`), summing USD with no currency conversion
     - _Requirements: 3.6, 13.2, 13.3, 21.4_
 
-- [~] 18. Checkpoint - ingestion, store, and query
+- [x] 18. Checkpoint - ingestion, store, and query
   - Ensure all tests pass, ask the user if questions arise.
 
-- [~] 19. Implement Fastify API layer
+- [x] 19. Implement Fastify API layer
   - [x] 19.1 Implement HTTP server, routes, and DTO shaping
     - Expose endpoints for dashboard, user, model, key, cost aggregates, request-detail paging, signals/insights, and export; shape DTOs from compute outputs; validate request params (page size, date range, billing month)
     - _Requirements: 3.2, 3.3, 19.1, 19.2, 19.3, 20.1_
 
-  - [~] 19.2 Write smoke test for server-side aggregation source
+  - [x] 19.2 Write smoke test for server-side aggregation source
     - Verify dashboard aggregate endpoints read from summary sets / server-side aggregation rather than a full client-side load of `request_detail`
     - _Requirements: 3.6_
 
-  - [~] 19.3 Write smoke tests for shared classifier and no currency conversion
+  - [x] 19.3 Write smoke tests for shared classifier and no currency conversion
     - Verify a single shared `classifyModelFamily` is used across Dashboard/Model/Cost endpoints and monetary aggregation performs no currency conversion
     - _Requirements: 6.5, 21.4_
 
-- [~] 20. Implement Web UI foundation
+- [x] 20. Implement Web UI foundation
   - [x] 20.1 Implement AppShell with theme and responsive layout
     - Nav + Bell with unread badge; `class`-based dark theme defaulting to dark and persisted to `localStorage`; responsive card grid (multi-column >=768px, single-column collapsed-nav 320–768px, single-column horizontal-scroll <320px)
     - _Requirements: 18.1, 18.2, 18.3, 18.4, 18.5_
 
-  - [~] 20.2 Implement shared controls and data layer
+  - [x] 20.2 Implement shared controls and data layer
     - `BillingMonthSelector`, `DateRangeFilter` (with start-after-end validation message), `SearchBox`, `ExportButton`; TanStack Query data fetching that updates the active page on filter/search/date change without full reload and a clear-filters reset to the latest month
     - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5_
 
@@ -374,35 +374,35 @@ Property-based tests (Properties 1–43 from the design) are placed as sub-tasks
     - Dark-mode default + persistence, responsive breakpoints, and ECharts resize-on-container-change
     - _Requirements: 18.1, 18.2, 18.3, 18.4, 18.5, 18.6_
 
-  - [~] 20.5 Write UI tests for filter/search/date reactivity
+  - [x] 20.5 Write UI tests for filter/search/date reactivity
     - Reactivity without full reload and clear-filters reset to the latest Billing_Month
     - _Requirements: 19.1, 19.4, 19.5_
 
-- [~] 21. Implement Dashboard Overview page
+- [x] 21. Implement Dashboard Overview page
   - [x] 21.1 Implement Dashboard KPI cards and charts
     - KPI card row (with month-over-month change), daily trend line charts, top-10 user spend bar, model-family donut, and cost-composition stacked bar; render empty-state messages when a chart has no source records
     - _Requirements: 4.1, 5.1, 5.2, 5.3, 5.4, 5.5_
 
-  - [~] 21.2 Write unit tests for KPI presence and empty states
+  - [x] 21.2 Write unit tests for KPI presence and empty states
     - KPI card presence on render and chart empty-state rendering
     - _Requirements: 4.1, 5.5_
 
-- [~] 22. Implement User Analysis page
-  - [~] 22.1 Implement user table, scatter, budget list, and per-user trend
+- [x] 22. Implement User Analysis page
+  - [x] 22.1 Implement user table, scatter, budget list, and per-user trend
     - Sortable/searchable user ranking table (default 25/page, email fallback label), activity scatter (X requests, Y spend, size tokens, hover tooltip), budget monitor list sorted by Usage_Percent desc with warning/critical styles, and per-user daily trend (zero-line vs empty-state handling)
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 8.1, 8.2, 8.3, 9.1, 9.2, 9.3, 9.4, 10.1, 10.2, 10.3_
 
-  - [~] 22.2 Write unit tests for table columns, tooltips, and trend states
+  - [x] 22.2 Write unit tests for table columns, tooltips, and trend states
     - Table columns/labels, scatter/budget tooltips and list rendering, and per-user all-zero vs empty-state renders
     - _Requirements: 7.1, 8.3, 9.1, 10.2, 10.3_
 
-- [~] 23. Implement Model Analysis page
-  - [~] 23.1 Implement model spend/request rankings, token stack, and efficiency scatter
+- [x] 23. Implement Model Analysis page
+  - [x] 23.1 Implement model spend/request rankings, token stack, and efficiency scatter
     - Model spend bar, request-count bar, `input/output/cache_read` token stacked bar per model, and efficiency scatter (X request-weighted `avg_duration_ms`, Y total Spend)
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5_
 
-- [~] 24. Implement API Key Analysis page
-  - [~] 24.1 Implement key ranking, daily trends, and health panel
+- [x] 24. Implement API Key Analysis page
+  - [x] 24.1 Implement key ranking, daily trends, and health panel
     - Key ranking (name, Spend, requests, owner), all-keys daily trend when none selected, per-key daily trend from request detail when selected, health panel (long-unused, high-frequency, abnormal-growth), and a deleted indicator on deleted-key rows
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7_
 
@@ -410,26 +410,26 @@ Property-based tests (Properties 1–43 from the design) are placed as sub-tasks
     - Verify the deleted indicator renders when `api_key_deleted` is true
     - _Requirements: 12.7_
 
-- [~] 25. Implement Cost Analysis page
-  - [~] 25.1 Implement cost trend, treemap, Pareto, and forecast panels
+- [x] 25. Implement Cost Analysis page
+  - [x] 25.1 Implement cost trend, treemap, Pareto, and forecast panels
     - Cost trend line with daily/weekly/monthly granularity, three-level user→model→key treemap sized by Spend, Pareto panel (top 10/20/30%), and forecast panel with over-budget indicator and insufficient-data message (< 3 days) suppressing the indicator
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 14.1, 14.2, 14.3, 14.4, 14.5_
 
-  - [~] 25.2 Write unit test for insufficient-data forecast render
+  - [x] 25.2 Write unit test for insufficient-data forecast render
     - Verify the insufficient-data message replaces the forecast and the over-budget indicator is suppressed below 3 days
     - _Requirements: 14.5_
 
-- [~] 26. Implement Signal Center drawer
-  - [~] 26.1 Implement SignalCenterDrawer
+- [x] 26. Implement Signal Center drawer
+  - [x] 26.1 Implement SignalCenterDrawer
     - Open as a fixed right-side drawer on Bell activation, close on Bell activation while open, group signals into the five categories, show the unread count badge regardless of drawer state, and navigate to the referenced page/entity on signal selection
     - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5_
 
-  - [~] 26.2 Write UI tests for drawer behavior and navigation
+  - [x] 26.2 Write UI tests for drawer behavior and navigation
     - Open/close on Bell activation and navigation on signal click
     - _Requirements: 16.1, 16.4, 16.5_
 
-- [~] 27. Wire report export into pages
-  - [~] 27.1 Connect ExportButton to the Export Service per page
+- [x] 27. Wire report export into pages
+  - [x] 27.1 Connect ExportButton to the Export Service per page
     - Export the currently filtered data of the active page to CSV; show a progress indicator while generating and ensure the export completes even if the indicator fails to render
     - _Requirements: 20.1, 20.2, 20.3, 20.4, 20.5_
 
@@ -437,12 +437,12 @@ Property-based tests (Properties 1–43 from the design) are placed as sub-tasks
     - Verify the download completes when the progress indicator render fault is injected
     - _Requirements: 20.4_
 
-- [ ] 28. Final integration and checkpoint
-  - [~] 28.1 Wire ingestion, store, API, and UI end-to-end
+- [x] 28. Final integration and checkpoint
+  - [x] 28.1 Wire ingestion, store, API, and UI end-to-end
     - Implement the application entry point that runs ingestion into the data store, starts the Fastify API, and serves the React UI, connecting all six surfaces and the Signal Center to live data
     - _Requirements: 1.7, 1.8, 3.6, 19.1_
 
-  - [~] 28.2 Final checkpoint - ensure all tests pass
+  - [x] 28.2 Final checkpoint - ensure all tests pass
     - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

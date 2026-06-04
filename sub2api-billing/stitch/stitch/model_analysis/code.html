@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Model Analysis | AI Management Cockpit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Hanken+Grotesk:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: #0b1120;
+            color: #dde2f8;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-panel {
+            background: #1E293BCC;
+            backdrop-filter: blur(20px);
+            border: 1px solid #334155;
+        }
+        .chart-container {
+            position: relative;
+            height: 240px;
+            width: 100%;
+        }
+        .data-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar for deep-dive aesthetics */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d1322;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4d8eff;
+        }
+    </style>
+<!-- Shared Component Styling Logic -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "critical-red": "#EF4444",
+                        "primary-container": "#4d8eff",
+                        "on-primary-container": "#00285d",
+                        "surface": "#0d1322",
+                        "primary": "#adc6ff",
+                        "surface-elevated": "#1E293BCC",
+                        "on-surface": "#dde2f8",
+                        "surface-container": "#191f2f",
+                        "secondary-container": "#00a572",
+                        "on-secondary-container": "#00311f",
+                        "outline-variant": "#424754",
+                        "border-glow": "#334155",
+                        "gpt-blue": "#00A2FF",
+                        "claude-emerald": "#059669",
+                        "gemini-amber": "#D97706",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-variant": "#2f3445"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "card-padding": "20px",
+                        "tight": "4px",
+                        "container-margin": "24px",
+                        "gutter": "16px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Hanken Grotesk"],
+                        "data-mono": ["JetBrains Mono"],
+                        "kpi-value": ["Inter"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                        "kpi-value": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 z-50 bg-surface border-b border-outline-variant flex justify-between items-center w-full px-container-margin py-base sticky">
+<div class="flex items-center gap-base">
+<span class="material-symbols-outlined text-primary" data-icon="analytics">analytics</span>
+<h1 class="text-headline-md font-headline-md font-bold text-on-surface">Usage Analytics</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="hover:bg-surface-variant/50 transition-colors p-2 rounded-full active:scale-95 duration-100">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="search">search</span>
+</button>
+<button class="hover:bg-surface-variant/50 transition-colors p-2 rounded-full relative active:scale-95 duration-100" onclick="toggleSignalCenter()">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-critical-red rounded-full"></span>
+</button>
+</div>
+</header>
+<main class="pb-24 pt-6 px-container-margin max-w-[1600px] mx-auto">
+<!-- Dashboard Hero Stats -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-8">
+<div class="glass-panel rounded-xl p-card-padding border border-border-glow">
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-tight">TOTAL SPEND</p>
+<div class="flex items-end justify-between">
+<span class="text-kpi-value font-kpi-value text-primary">$12,482.91</span>
+<span class="text-secondary text-label-sm data-mono flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span>
+                        12.5%
+                    </span>
+</div>
+</div>
+<div class="glass-panel rounded-xl p-card-padding border border-border-glow">
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-tight">REQUEST VOLUME</p>
+<div class="flex items-end justify-between">
+<span class="text-kpi-value font-kpi-value text-on-surface">1.2M</span>
+<span class="text-critical-red text-label-sm data-mono flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_down">trending_down</span>
+                        4.2%
+                    </span>
+</div>
+</div>
+<div class="glass-panel rounded-xl p-card-padding border border-border-glow">
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-tight">ACTIVE MODELS</p>
+<div class="flex items-end justify-between">
+<span class="text-kpi-value font-kpi-value text-on-surface">14</span>
+<span class="text-on-surface-variant text-label-sm data-mono">STABLE</span>
+</div>
+</div>
+<div class="glass-panel rounded-xl p-card-padding border border-border-glow">
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-tight">AVG LATENCY</p>
+<div class="flex items-end justify-between">
+<span class="text-kpi-value font-kpi-value text-on-surface">342ms</span>
+<span class="text-secondary text-label-sm data-mono">OPTIMAL</span>
+</div>
+</div>
+</div>
+<!-- Main Bento Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Model Spend Bar Chart -->
+<div class="lg:col-span-8 glass-panel rounded-xl p-card-padding border border-border-glow">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-headline-md font-headline-md">Spend by Model</h3>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-surface-variant rounded-full text-label-sm text-on-surface-variant cursor-pointer hover:bg-primary/20 transition-all">Last 7 Days</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+<div class="chart-container flex items-end justify-between gap-4 pt-4">
+<!-- Dynamic Bars Simulation -->
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-gpt-blue rounded-t-lg transition-all duration-500 group-hover:brightness-125" style="height: 85%;"></div>
+<span class="text-label-sm data-mono opacity-60">GPT-4o</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-claude-emerald rounded-t-lg transition-all duration-500 group-hover:brightness-125" style="height: 60%;"></div>
+<span class="text-label-sm data-mono opacity-60">Claude 3.5</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-gemini-amber rounded-t-lg transition-all duration-500 group-hover:brightness-125" style="height: 45%;"></div>
+<span class="text-label-sm data-mono opacity-60">Gemini 1.5</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-gpt-blue/60 rounded-t-lg transition-all duration-500 group-hover:brightness-125" style="height: 30%;"></div>
+<span class="text-label-sm data-mono opacity-60">GPT-3.5</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-other-indigo rounded-t-lg transition-all duration-500 group-hover:brightness-125" style="height: 20%;"></div>
+<span class="text-label-sm data-mono opacity-60">Llama 3</span>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant">
+<p class="text-body-md text-on-surface-variant">Narrative: <span class="text-on-surface">GPT-4o accounts for 52% of total spend but delivers 68% of successful outputs.</span></p>
+</div>
+</div>
+<!-- Token Distribution Stacked Bar -->
+<div class="lg:col-span-4 glass-panel rounded-xl p-card-padding border border-border-glow">
+<h3 class="text-headline-md font-headline-md mb-6">Token Mix</h3>
+<div class="space-y-6">
+<div class="space-y-2">
+<div class="flex justify-between text-label-sm data-mono">
+<span>Input</span>
+<span>64.2%</span>
+</div>
+<div class="w-full h-3 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary-container" style="width: 64.2%;"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-label-sm data-mono">
+<span>Output</span>
+<span>28.5%</span>
+</div>
+<div class="w-full h-3 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-secondary" style="width: 28.5%;"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-label-sm data-mono">
+<span>Cached</span>
+<span>7.3%</span>
+</div>
+<div class="w-full h-3 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-gemini-amber" style="width: 7.3%;"></div>
+</div>
+</div>
+</div>
+<div class="mt-8 p-4 bg-primary/5 rounded-lg border border-primary/20">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="lightbulb">lightbulb</span>
+<p class="text-label-sm text-on-surface leading-relaxed">Increasing cache hit rate to 15% could save $1,200/mo.</p>
+</div>
+</div>
+</div>
+<!-- Efficiency Scatter Plot (Visual Mock) -->
+<div class="lg:col-span-12 glass-panel rounded-xl p-card-padding border border-border-glow overflow-hidden">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h3 class="text-headline-md font-headline-md">Efficiency Quadrant</h3>
+<p class="text-label-sm text-on-surface-variant">Latency (ms) vs. Cost ($/1M tokens)</p>
+</div>
+<button class="flex items-center gap-2 border border-outline-variant px-4 py-2 rounded-lg text-label-sm hover:bg-surface-variant transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]" data-icon="filter_list">filter_list</span>
+                        All Families
+                    </button>
+</div>
+<div class="relative h-[300px] border-l border-b border-outline-variant/50 ml-8 mb-8">
+<!-- Grid Lines -->
+<div class="absolute inset-0 grid grid-cols-4 grid-rows-4 pointer-events-none">
+<div class="border-r border-t border-outline-variant/10"></div>
+<div class="border-r border-t border-outline-variant/10"></div>
+<div class="border-r border-t border-outline-variant/10"></div>
+<div class="border-t border-outline-variant/10"></div>
+</div>
+<!-- Scatter Points -->
+<div class="absolute bottom-[80%] left-[10%] group">
+<div class="w-4 h-4 bg-gpt-blue rounded-full shadow-[0_0_15px_rgba(0,162,255,0.5)] cursor-pointer hover:scale-150 transition-transform"></div>
+<div class="absolute top-[-40px] left-1/2 -translate-x-1/2 bg-surface border border-border-glow px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">GPT-4o (Low Latency, High Cost)</div>
+</div>
+<div class="absolute bottom-[30%] left-[60%] group">
+<div class="w-4 h-4 bg-claude-emerald rounded-full shadow-[0_0_15px_rgba(5,150,105,0.5)] cursor-pointer hover:scale-150 transition-transform"></div>
+<div class="absolute top-[-40px] left-1/2 -translate-x-1/2 bg-surface border border-border-glow px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Claude 3 Haiku</div>
+</div>
+<div class="absolute bottom-[60%] left-[40%] group">
+<div class="w-4 h-4 bg-gemini-amber rounded-full shadow-[0_0_15px_rgba(217,119,6,0.5)] cursor-pointer hover:scale-150 transition-transform"></div>
+<div class="absolute top-[-40px] left-1/2 -translate-x-1/2 bg-surface border border-border-glow px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Gemini Pro</div>
+</div>
+<div class="absolute bottom-[10%] left-[85%] group">
+<div class="w-4 h-4 bg-other-indigo rounded-full shadow-[0_0_15px_rgba(99,102,241,0.5)] cursor-pointer hover:scale-150 transition-transform"></div>
+<div class="absolute top-[-40px] left-1/2 -translate-x-1/2 bg-surface border border-border-glow px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Llama 3 (Efficient)</div>
+</div>
+<!-- Labels -->
+<span class="absolute -left-12 top-1/2 -rotate-90 text-[10px] text-on-surface-variant font-label-sm">COST PER MILLION</span>
+<span class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] text-on-surface-variant font-label-sm">LATENCY (MS)</span>
+</div>
+</div>
+<!-- Detailed Model Table -->
+<div class="lg:col-span-12 glass-panel rounded-xl border border-border-glow overflow-hidden">
+<div class="p-card-padding flex justify-between items-center bg-surface-container-low">
+<h3 class="text-headline-md font-headline-md">Inventory Logs</h3>
+<div class="flex gap-4">
+<div class="relative">
+<input class="bg-surface border border-outline-variant rounded-lg pl-10 pr-4 py-2 text-label-sm w-64 focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Search models..." type="text"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]" data-icon="search">search</span>
+</div>
+<button class="bg-primary text-on-primary font-bold px-4 py-2 rounded-lg text-label-sm flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+                            Export
+                        </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="border-b border-outline-variant text-label-sm text-on-surface-variant bg-surface-container-low/50">
+<th class="p-4 font-semibold uppercase tracking-wider">Model Name</th>
+<th class="p-4 font-semibold uppercase tracking-wider">Family</th>
+<th class="p-4 font-semibold uppercase tracking-wider">Requests</th>
+<th class="p-4 font-semibold uppercase tracking-wider">Avg Latency</th>
+<th class="p-4 font-semibold uppercase tracking-wider">Total Cost</th>
+<th class="p-4 font-semibold uppercase tracking-wider">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr class="hover:bg-surface-variant/20 transition-colors">
+<td class="p-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-gpt-blue/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-gpt-blue text-[18px]" data-icon="bolt">bolt</span>
+</div>
+<span class="font-medium">gpt-4o-2024-05-13</span>
+</td>
+<td class="p-4"><span class="px-2 py-0.5 rounded border border-gpt-blue/30 text-[10px] text-gpt-blue bg-gpt-blue/5">GPT</span></td>
+<td class="p-4 data-mono">412,084</td>
+<td class="p-4 data-mono">248ms</td>
+<td class="p-4 data-mono font-bold text-primary">$6,231.10</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_#4edea3]"></div>
+<span class="text-label-sm">Active</span>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-variant/20 transition-colors">
+<td class="p-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-claude-emerald/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-claude-emerald text-[18px]" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<span class="font-medium">claude-3-5-sonnet</span>
+</td>
+<td class="p-4"><span class="px-2 py-0.5 rounded border border-claude-emerald/30 text-[10px] text-claude-emerald bg-claude-emerald/5">CLAUDE</span></td>
+<td class="p-4 data-mono">289,122</td>
+<td class="p-4 data-mono">512ms</td>
+<td class="p-4 data-mono font-bold text-primary">$3,102.45</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_#4edea3]"></div>
+<span class="text-label-sm">Active</span>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-variant/20 transition-colors">
+<td class="p-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-gemini-amber/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-gemini-amber text-[18px]" data-icon="flare">flare</span>
+</div>
+<span class="font-medium">gemini-1.5-pro</span>
+</td>
+<td class="p-4"><span class="px-2 py-0.5 rounded border border-gemini-amber/30 text-[10px] text-gemini-amber bg-gemini-amber/5">GEMINI</span></td>
+<td class="p-4 data-mono">154,320</td>
+<td class="p-4 data-mono">440ms</td>
+<td class="p-4 data-mono font-bold text-primary">$1,894.20</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-warning-yellow shadow-[0_0_8px_#FBBF24]"></div>
+<span class="text-label-sm">Throttled</span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+<!-- NavigationDrawer (Signal Center) -->
+<aside class="fixed inset-y-0 right-0 w-full md:w-[400px] z-[60] glass-panel border-l border-border-glow translate-x-full transition-transform duration-300 ease-in-out" id="signalCenter">
+<div class="flex flex-col h-full p-card-padding">
+<div class="flex justify-between items-center mb-8">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="error">error</span>
+<h2 class="text-headline-sm-mobile font-headline-sm-mobile text-on-surface">Signal Center</h2>
+</div>
+<button class="p-2 hover:bg-surface-variant rounded-full transition-colors" onclick="toggleSignalCenter()">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<div class="space-y-4">
+<div class="p-4 bg-primary-container/10 border border-primary-container/20 rounded-lg flex gap-3 group hover:brightness-110 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-primary-container" data-icon="trending_up">trending_up</span>
+<div>
+<p class="text-label-sm font-bold text-on-primary-container">Usage Spike Detected</p>
+<p class="text-body-md text-on-surface-variant mt-1">GPT-4o usage is 40% above baseline in Region US-East.</p>
+</div>
+</div>
+<div class="p-4 bg-error-container/10 border border-error-container/20 rounded-lg flex gap-3 group hover:brightness-110 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-critical-red" data-icon="warning">warning</span>
+<div>
+<p class="text-label-sm font-bold text-critical-red">Budget Risk</p>
+<p class="text-body-md text-on-surface-variant mt-1">Projected spend for June exceeds budget by $1,400.</p>
+</div>
+</div>
+<div class="p-4 bg-surface-variant/30 border border-outline-variant/30 rounded-lg flex gap-3 group hover:brightness-110 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="query_stats">query_stats</span>
+<div>
+<p class="text-label-sm font-bold text-on-surface">Anomaly Detected</p>
+<p class="text-body-md text-on-surface-variant mt-1">Sub-10ms response time on Claude 3 indicates potential bypass.</p>
+</div>
+</div>
+</div>
+<div class="mt-auto pt-6 border-t border-outline-variant">
+<button class="w-full py-3 bg-surface-variant text-on-surface-variant font-bold rounded-lg hover:text-primary transition-all active:scale-95">
+                    Clear All Alerts
+                </button>
+</div>
+</div>
+</aside>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container border-t border-outline-variant shadow-lg flex justify-around items-center h-16 px-2 md:hidden">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-label-sm font-label-sm">Dash</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+<span class="text-label-sm font-label-sm">Users</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-3 py-1 active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="view_in_ar">view_in_ar</span>
+<span class="text-label-sm font-label-sm">Models</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+<span class="text-label-sm font-label-sm">Keys</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="text-label-sm font-label-sm">Costs</span>
+</a>
+</nav>
+<!-- Desktop Sidebar Anchor -->
+<div class="hidden md:flex fixed left-0 top-0 h-full w-20 flex-col items-center py-base bg-surface border-r border-outline-variant z-40">
+<div class="w-12 h-12 bg-primary-container rounded-xl flex items-center justify-center mb-8">
+<span class="material-symbols-outlined text-on-primary-container font-bold" data-icon="token">token</span>
+</div>
+<div class="flex flex-col gap-6">
+<button class="p-3 rounded-xl text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+</button>
+<button class="p-3 rounded-xl text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+</button>
+<button class="p-3 rounded-xl bg-primary-container text-on-primary-container shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined" data-icon="view_in_ar">view_in_ar</span>
+</button>
+<button class="p-3 rounded-xl text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+</button>
+<button class="p-3 rounded-xl text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+</button>
+</div>
+<div class="mt-auto mb-6">
+<button class="p-3 rounded-xl text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</div>
+<script>
+        function toggleSignalCenter() {
+            const drawer = document.getElementById('signalCenter');
+            drawer.classList.toggle('translate-x-full');
+        }
+
+        // Simple atmospheric interaction
+        document.querySelectorAll('.glass-panel').forEach(panel => {
+            panel.addEventListener('mousemove', (e) => {
+                const rect = panel.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                panel.style.setProperty('--mouse-x', `${x}px`);
+                panel.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+    </script>
+</body></html>

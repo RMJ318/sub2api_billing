@@ -16,10 +16,10 @@ export function ExportButton({
     <a
       href={disabled ? undefined : buildExportUrl(pageName, billingMonth)}
       aria-disabled={disabled}
-      className={`inline-flex items-center rounded-md px-3 py-2 text-sm font-medium ${
+      className={`app-button-primary ${
         disabled
-          ? 'cursor-not-allowed bg-neutral-200 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-500'
-          : 'bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white'
+          ? 'pointer-events-none cursor-not-allowed opacity-45'
+          : ''
       }`}
     >
       Export CSV

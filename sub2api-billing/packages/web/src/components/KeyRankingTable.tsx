@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { SearchBox } from './SearchBox.js';
 
 export interface KeyRankingRow {
   apiKeyId: string;
@@ -13,21 +14,34 @@ export interface KeyRankingTableProps {
   rows: KeyRankingRow[];
   selectedKeyId?: string | null;
   onSelectKey?: (apiKeyId: string) => void;
+  searchTerm?: string;
+  onSearchTermChange?: (value: string) => void;
 }
 
 export function KeyRankingTable({
   rows,
   selectedKeyId = null,
   onSelectKey,
+  searchTerm = '',
+  onSearchTermChange,
 }: KeyRankingTableProps): JSX.Element {
   return (
     <section className="rounded-lg border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-base font-semibold text-neutral-950 dark:text-neutral-50">
-        API Key Ranking
-      </h2>
-      <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-        Spend and usage by API key for the selected month.
-      </p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-base font-semibold text-neutral-950 dark:text-neutral-50">
+            API Key Ranking
+          </h2>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            Spend and usage by API key for the selected month.
+          </p>
+        </div>
+        <SearchBox
+          value={searchTerm}
+          onChange={(value) => onSearchTermChange?.(value)}
+          placeholder="Search key"
+        />
+      </div>
 
       <div className="mt-4 overflow-x-auto">
         <table className="min-w-full divide-y divide-neutral-200 text-sm dark:divide-neutral-800">
@@ -74,6 +88,16 @@ export function KeyRankingTable({
                 </td>
               </tr>
             ))}
+            {rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="py-6 text-center text-sm text-neutral-500 dark:text-neutral-400"
+                >
+                  No API keys match the current search.
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>

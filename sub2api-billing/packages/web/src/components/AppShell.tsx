@@ -17,28 +17,13 @@ const NAV_LINKS: NavLink[] = [
 ];
 
 export interface AppShellProps {
-  /** The page content to render inside the shell. */
   children: ReactNode;
-  /** Number of unread signals for the Bell badge. */
   unreadCount?: number;
-  /** Callback when the Bell icon is activated. */
   onBellClick?: () => void;
-  /** Currently active navigation path (for highlighting). */
   activePath?: string;
-  /** Callback when a navigation link is clicked. */
   onNavigate?: (path: string) => void;
 }
 
-/**
- * Application shell providing:
- * - Navigation sidebar with links to Dashboard, Users, Models, Keys, Cost
- * - Header with Bell icon (unread badge count) and theme toggle
- * - Class-based dark theme defaulting to dark, persisted to localStorage
- * - Responsive layout:
- *   - Multi-column card grid >= 768px with visible nav sidebar
- *   - Single-column with collapsed nav (hamburger) 320–768px
- *   - Single-column with horizontal scroll < 320px
- */
 export function AppShell({
   children,
   unreadCount = 0,
@@ -50,99 +35,156 @@ export function AppShell({
   const [navOpen, setNavOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-neutral-100 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
-      {/* Header */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-900">
-        {/* Left: hamburger (mobile) + title */}
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            aria-label="Toggle navigation"
-            className="md:hidden rounded p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-            onClick={() => setNavOpen((prev) => !prev)}
-          >
-            <HamburgerIcon />
-          </button>
-          <span className="text-lg font-semibold whitespace-nowrap">
-            AI Usage Analytics
-          </span>
+    <div className="app-shell-bg min-h-screen text-[var(--text)]">
+      <aside className="glass-panel custom-scrollbar fixed inset-y-0 left-0 z-40 hidden h-screen w-64 flex-col border-r border-[var(--border-soft)] md:flex">
+        <div className="px-6 py-7">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(173,198,255,0.12)] text-[var(--primary)]">
+              <AnalyticsIcon />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-dim)]">
+                Synthetix
+              </p>
+              <h1 className="mt-1 text-xl font-semibold text-[var(--text)]">AI Usage Analytics</h1>
+            </div>
+          </div>
         </div>
 
-        {/* Right: theme toggle + Bell */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            className="rounded p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-            onClick={toggleTheme}
-          >
-            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-          </button>
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="relative rounded p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-            onClick={onBellClick}
-          >
-            <BellIcon />
-            {unreadCount > 0 && (
-              <span
-                aria-label={`${unreadCount} unread notifications`}
-                className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white"
-              >
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </header>
-
-      <div className="flex">
-        {/* Sidebar - visible on md+ */}
-        <nav
-          aria-label="Main navigation"
-          className={`
-            fixed inset-y-0 left-0 z-40 mt-14 w-56 transform border-r border-neutral-200 bg-white transition-transform dark:border-neutral-800 dark:bg-neutral-900
-            md:static md:z-auto md:mt-0 md:translate-x-0 md:transition-none
-            ${navOpen ? 'translate-x-0' : '-translate-x-full'}
-          `}
-        >
-          <ul className="flex flex-col gap-1 p-3">
-            {NAV_LINKS.map((link) => (
-              <li key={link.path}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onNavigate?.(link.path);
-                    setNavOpen(false);
-                  }}
-                  className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors
-                    ${
-                      activePath === link.path
-                        ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-white'
-                        : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
-                    }
-                  `}
-                >
-                  {link.icon}
-                  {link.label}
-                </button>
-              </li>
-            ))}
+        <nav aria-label="Main navigation" className="flex-1 px-4">
+          <ul className="space-y-2">
+            {NAV_LINKS.map((link) => {
+              const active = activePath === link.path;
+              return (
+                <li key={link.path}>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate?.(link.path)}
+                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition ${
+                      active
+                        ? 'bg-[var(--secondary-strong)] text-[#00311f] shadow-[0_12px_30px_rgba(0,165,114,0.25)]'
+                        : 'text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text)]'
+                    }`}
+                  >
+                    <span className="opacity-90">{link.icon}</span>
+                    <span>{link.label}</span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
-        {/* Backdrop for mobile nav */}
-        {navOpen && (
-          <div
-            className="fixed inset-0 z-30 bg-black/40 md:hidden"
-            onClick={() => setNavOpen(false)}
-            aria-hidden="true"
-          />
-        )}
+        <div className="mt-6 border-t border-[var(--border-soft)] p-4">
+          <div className="panel-muted flex items-center gap-3 rounded-2xl p-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(77,142,255,0.2)] text-sm font-bold text-[var(--primary)]">
+              AU
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[var(--text)]">Admin User</p>
+              <p className="text-xs text-[var(--text-dim)]">System Architect</p>
+            </div>
+          </div>
+        </div>
+      </aside>
 
-        {/* Main content area with responsive grid */}
-        <main className="min-w-0 flex-1 overflow-x-auto p-4 md:p-6">
+      <div className="min-h-screen min-w-0 md:pl-64">
+        <header className="glass-panel sticky top-0 z-30 border-b border-[var(--border-soft)]">
+          <div className="flex min-h-[74px] items-center justify-between gap-4 px-4 py-3 md:px-8">
+            <div className="flex min-w-0 items-center gap-3">
+              <button
+                type="button"
+                aria-label="Toggle navigation"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-white/5 text-[var(--text)] hover:bg-white/10 md:hidden"
+                onClick={() => setNavOpen((prev) => !prev)}
+              >
+                <HamburgerIcon />
+              </button>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-dim)]">
+                  Enterprise cockpit
+                </p>
+                <h2 className="truncate text-xl font-semibold text-[var(--text)] md:text-2xl">
+                  Usage Analytics
+                </h2>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-3">
+              <button
+                type="button"
+                aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                className="inline-flex h-11 items-center gap-2 rounded-2xl border border-[var(--border)] bg-white/5 px-3 text-sm font-medium text-[var(--text-muted)] hover:bg-white/10 hover:text-[var(--text)]"
+                onClick={toggleTheme}
+              >
+                {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+                <span className="hidden sm:inline">Theme</span>
+              </button>
+              <button
+                type="button"
+                aria-label="Notifications"
+                className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-white/5 text-[var(--text-muted)] hover:bg-white/10 hover:text-[var(--text)]"
+                onClick={onBellClick}
+              >
+                <BellIcon />
+                {unreadCount > 0 ? (
+                  <span
+                    aria-label={`${unreadCount} unread notifications`}
+                    className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[var(--danger)] px-1 text-[10px] font-bold text-white"
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                ) : null}
+              </button>
+            </div>
+          </div>
+        </header>
+
+      {navOpen ? (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setNavOpen(false)} aria-hidden="true" />
+          <nav className="glass-panel absolute inset-y-0 left-0 w-72 border-r border-[var(--border-soft)] p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text-dim)]">
+                Navigation
+              </span>
+              <button
+                type="button"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[var(--text-muted)] hover:bg-white/10 hover:text-[var(--text)]"
+                onClick={() => setNavOpen(false)}
+              >
+                <CloseIcon />
+              </button>
+            </div>
+            <ul className="space-y-2">
+              {NAV_LINKS.map((link) => {
+                const active = activePath === link.path;
+                return (
+                  <li key={link.path}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onNavigate?.(link.path);
+                        setNavOpen(false);
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition ${
+                        active
+                          ? 'bg-[var(--secondary-strong)] text-[#00311f]'
+                          : 'text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text)]'
+                      }`}
+                    >
+                      {link.icon}
+                      {link.label}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        </div>
+      ) : null}
+
+        <main className="px-4 py-6 md:px-8 md:py-8">
           <div className="app-card-grid">{children}</div>
         </main>
       </div>
@@ -150,36 +192,38 @@ export function AppShell({
   );
 }
 
-/* ---------- SVG Icons ---------- */
-
-function HamburgerIcon() {
+function AnalyticsIcon() {
   return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
+    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth={2}
-        d="M4 6h16M4 12h16M4 18h16"
+        strokeWidth={1.8}
+        d="M4 19V5m5 14V9m5 10V11m6 8H2"
       />
+    </svg>
+  );
+}
+
+function HamburgerIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6l12 12M18 6L6 18" />
     </svg>
   );
 }
 
 function BellIcon() {
   return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
+    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -192,13 +236,7 @@ function BellIcon() {
 
 function SunIcon() {
   return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
+    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -211,13 +249,7 @@ function SunIcon() {
 
 function MoonIcon() {
   return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
+    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -230,13 +262,7 @@ function MoonIcon() {
 
 function DashboardIcon() {
   return (
-    <svg
-      className="h-4 w-4"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -249,13 +275,7 @@ function DashboardIcon() {
 
 function UsersIcon() {
   return (
-    <svg
-      className="h-4 w-4"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -268,13 +288,7 @@ function UsersIcon() {
 
 function ModelsIcon() {
   return (
-    <svg
-      className="h-4 w-4"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -287,13 +301,7 @@ function ModelsIcon() {
 
 function KeysIcon() {
   return (
-    <svg
-      className="h-4 w-4"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -306,13 +314,7 @@ function KeysIcon() {
 
 function CostIcon() {
   return (
-    <svg
-      className="h-4 w-4"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Usage Analytics | AI Management Cockpit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "critical-red": "#EF4444",
+                        "primary-container": "#4d8eff",
+                        "on-primary-container": "#00285d",
+                        "surface": "#0d1322",
+                        "on-primary-fixed-variant": "#004395",
+                        "primary": "#adc6ff",
+                        "inverse-primary": "#005ac2",
+                        "on-secondary-fixed-variant": "#005236",
+                        "gemini-amber": "#D97706",
+                        "error": "#ffb4ab",
+                        "warning-yellow": "#FBBF24",
+                        "surface-dim": "#0d1322",
+                        "surface-elevated": "#1E293BCC",
+                        "tertiary-container": "#ca8100",
+                        "on-primary-fixed": "#001a42",
+                        "secondary-fixed-dim": "#4edea3",
+                        "border-glow": "#334155",
+                        "on-secondary-container": "#00311f",
+                        "on-tertiary-fixed": "#2a1700",
+                        "on-surface": "#dde2f8",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "surface-container-lowest": "#080e1d",
+                        "on-secondary": "#003824",
+                        "error-container": "#93000a",
+                        "primary-fixed-dim": "#adc6ff",
+                        "secondary-fixed": "#6ffbbe",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-low": "#151b2b",
+                        "on-primary": "#002e6a",
+                        "surface-tint": "#adc6ff",
+                        "tertiary-fixed": "#ffddb8",
+                        "surface-container-high": "#242a3a",
+                        "on-secondary-fixed": "#002113",
+                        "on-error-container": "#ffdad6",
+                        "inverse-surface": "#dde2f8",
+                        "other-indigo": "#6366F1",
+                        "on-error": "#690005",
+                        "surface-container": "#191f2f",
+                        "surface-bright": "#33394a",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "outline-variant": "#424754",
+                        "background": "#0d1322",
+                        "secondary": "#4edea3",
+                        "on-background": "#dde2f8",
+                        "on-tertiary-container": "#3e2400",
+                        "claude-emerald": "#059669",
+                        "inverse-on-surface": "#2a3040",
+                        "secondary-container": "#00a572",
+                        "surface-variant": "#2f3445",
+                        "outline": "#8c909f",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-container-highest": "#2f3445",
+                        "on-tertiary": "#472a00",
+                        "gpt-blue": "#00A2FF",
+                        "tertiary": "#ffb95f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "card-padding": "20px",
+                        "tight": "4px",
+                        "container-margin": "24px",
+                        "gutter": "16px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Hanken Grotesk"],
+                        "data-mono": ["JetBrains Mono"],
+                        "kpi-value": ["Inter"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                        "kpi-value": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "30px", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "22px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: #1E293BCC;
+            backdrop-filter: blur(20px);
+            border: 1px solid #334155;
+        }
+        .data-grid-pattern {
+            background-image: radial-gradient(#334155 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md selection:bg-primary/30">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 z-50 bg-surface border-b border-outline-variant flex justify-between items-center w-full px-container-margin py-base">
+<div class="flex items-center gap-base">
+<span class="material-symbols-outlined text-primary" data-icon="analytics">analytics</span>
+<h1 class="text-headline-md font-headline-md font-bold text-on-surface">Usage Analytics</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined p-2 rounded-full hover:bg-surface-variant/50 transition-colors active:scale-95 duration-100 text-on-surface-variant" data-icon="search">search</button>
+<button class="material-symbols-outlined p-2 rounded-full hover:bg-surface-variant/50 transition-colors active:scale-95 duration-100 text-on-surface-variant" data-icon="notifications">notifications</button>
+<div class="h-8 w-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-label-sm">JD</div>
+</div>
+</header>
+<!-- Navigation Drawer (Signal Center) -->
+<aside class="fixed inset-y-0 right-0 w-full md:w-[400px] z-[60] bg-surface-elevated backdrop-blur-xl border-l border-border-glow shadow-2xl flex flex-col h-full translate-x-full transition-transform duration-300" id="signal-center">
+<div class="p-card-padding flex items-center justify-between border-b border-outline-variant">
+<div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Signal Center</span>
+<h2 class="text-headline-sm-mobile font-headline-sm-mobile text-primary">Active Alerts</h2>
+</div>
+<button class="material-symbols-outlined p-2 hover:bg-surface-variant rounded-full" onclick="toggleDrawer()">close</button>
+</div>
+<div class="flex-1 overflow-y-auto p-card-padding space-y-4">
+<div class="p-4 bg-error-container/20 border border-critical-red/30 rounded-lg group hover:brightness-110 transition-all cursor-pointer">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-critical-red" data-icon="error">error</span>
+<div>
+<p class="font-bold text-on-surface">Critical Alerts</p>
+<p class="text-sm text-on-surface-variant">Token limit exceeded for GPT-4-32k endpoint in EMEA.</p>
+</div>
+</div>
+</div>
+<div class="p-4 bg-tertiary-container/20 border border-gemini-amber/30 rounded-lg group hover:brightness-110 transition-all cursor-pointer">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-gemini-amber" data-icon="warning">warning</span>
+<div>
+<p class="font-bold text-on-surface">Budget Risk</p>
+<p class="text-sm text-on-surface-variant">Project 'Vision-Alpha' reached 85% of monthly allocation.</p>
+</div>
+</div>
+</div>
+<div class="p-4 bg-primary-container/20 border border-primary/30 rounded-lg group hover:brightness-110 transition-all cursor-pointer">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="query_stats">query_stats</span>
+<div>
+<p class="font-bold text-on-surface">Anomaly Detected</p>
+<p class="text-sm text-on-surface-variant">Unusual spike in Claude-3-Opus latency in West US.</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="pt-20 pb-24 px-container-margin min-h-screen data-grid-pattern">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter max-w-7xl mx-auto">
+<!-- User Spend Ranking Table (7 Cols) -->
+<section class="md:col-span-8 space-y-gutter">
+<div class="bg-surface-container-low rounded-xl border border-outline-variant p-card-padding shadow-lg">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+<div>
+<h3 class="text-headline-md font-headline-md text-on-surface">Top Consumers</h3>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Real-time ranking by net token spend</p>
+</div>
+<div class="flex gap-2">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm" data-icon="search">search</span>
+<input class="bg-surface-container-lowest border border-outline-variant rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none text-on-surface w-48 lg:w-64" placeholder="Search users..." type="text"/>
+</div>
+<button class="bg-surface-container-high border border-outline-variant p-2 rounded-lg hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant">
+<th class="py-3 px-4 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">User Identity</th>
+<th class="py-3 px-4 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Requests</th>
+<th class="py-3 px-4 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Net Spend</th>
+<th class="py-3 px-4 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Change (24h)</th>
+<th class="py-3 px-4 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr class="hover:bg-surface-container/50 transition-colors group">
+<td class="py-4 px-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-lg bg-gpt-blue/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-gpt-blue" data-icon="person">person</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">alex.rivera@corp.ai</p>
+<p class="text-xs text-on-surface-variant">Team: Product Development</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 font-data-mono text-on-surface">42,891</td>
+<td class="py-4 px-4 font-data-mono text-on-surface">$1,240.50</td>
+<td class="py-4 px-4">
+<span class="flex items-center text-critical-red text-xs font-bold">
+<span class="material-symbols-outlined text-xs" data-icon="trending_up">trending_up</span>
+                                            12.4%
+                                        </span>
+</td>
+<td class="py-4 px-4">
+<button class="text-primary hover:bg-primary/10 px-3 py-1 rounded-lg text-xs font-bold transition-all">Details</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container/50 transition-colors group">
+<td class="py-4 px-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-lg bg-claude-emerald/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-claude-emerald" data-icon="person">person</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">sarah.chen@rnd.ai</p>
+<p class="text-xs text-on-surface-variant">Team: Research &amp; Lab</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 font-data-mono text-on-surface">38,112</td>
+<td class="py-4 px-4 font-data-mono text-on-surface">$982.12</td>
+<td class="py-4 px-4">
+<span class="flex items-center text-secondary text-xs font-bold">
+<span class="material-symbols-outlined text-xs" data-icon="trending_down">trending_down</span>
+                                            4.1%
+                                        </span>
+</td>
+<td class="py-4 px-4">
+<button class="text-primary hover:bg-primary/10 px-3 py-1 rounded-lg text-xs font-bold transition-all">Details</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container/50 transition-colors group">
+<td class="py-4 px-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-lg bg-other-indigo/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-other-indigo" data-icon="person">person</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">marcus.vane@mktg.ai</p>
+<p class="text-xs text-on-surface-variant">Team: Growth Marketing</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 font-data-mono text-on-surface">22,504</td>
+<td class="py-4 px-4 font-data-mono text-on-surface">$541.20</td>
+<td class="py-4 px-4">
+<span class="flex items-center text-secondary text-xs font-bold">
+<span class="material-symbols-outlined text-xs" data-icon="trending_flat">trending_flat</span>
+                                            0.2%
+                                        </span>
+</td>
+<td class="py-4 px-4">
+<button class="text-primary hover:bg-primary/10 px-3 py-1 rounded-lg text-xs font-bold transition-all">Details</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Scatter Plot Visual (Activity vs Cost) -->
+<div class="bg-surface-container-low rounded-xl border border-outline-variant p-card-padding">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-widest">Efficiency Matrix</h3>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+<span class="text-xs text-on-surface-variant">Active Users</span>
+</div>
+</div>
+<div class="h-64 relative bg-surface-container-highest/20 rounded-lg overflow-hidden border border-outline-variant/30">
+<!-- Custom CSS Grid for Chart -->
+<div class="absolute inset-0 grid grid-cols-6 grid-rows-4 opacity-20 border-l border-b border-outline">
+<div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div>
+<div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div>
+<div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div>
+<div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div><div class="border-r border-t border-outline/50"></div>
+</div>
+<!-- Scatter Points -->
+<div class="absolute bottom-[20%] left-[30%] w-4 h-4 bg-primary rounded-full shadow-[0_0_15px_rgba(173,198,255,0.5)] animate-pulse"></div>
+<div class="absolute bottom-[45%] left-[60%] w-5 h-5 bg-secondary rounded-full shadow-[0_0_15px_rgba(78,222,163,0.5)]"></div>
+<div class="absolute bottom-[75%] left-[85%] w-3 h-3 bg-critical-red rounded-full shadow-[0_0_15px_rgba(239,68,68,0.5)]"></div>
+<div class="absolute bottom-[10%] left-[10%] w-4 h-4 bg-other-indigo rounded-full opacity-60"></div>
+<div class="absolute bottom-[30%] left-[50%] w-3 h-3 bg-primary rounded-full opacity-60"></div>
+<div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-on-surface-variant font-data-mono">REQUEST VOLUME (TOTAL)</div>
+<div class="absolute left-2 top-1/2 -rotate-90 -translate-y-1/2 text-[10px] text-on-surface-variant font-data-mono">COMPUTE COST ($)</div>
+</div>
+</div>
+</section>
+<!-- Sidebar Analytics (4 Cols) -->
+<section class="md:col-span-4 space-y-gutter">
+<!-- Budget Monitoring -->
+<div class="bg-surface-container-low rounded-xl border border-outline-variant p-card-padding">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-warning-yellow" data-icon="account_balance_wallet">account_balance_wallet</span>
+<h3 class="font-bold text-on-surface">Budget Monitoring</h3>
+</div>
+<div class="space-y-6">
+<div>
+<div class="flex justify-between items-end mb-2">
+<span class="text-sm font-bold text-on-surface">Product Team</span>
+<span class="text-xs text-on-surface-variant font-data-mono">92% utilized</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-2 overflow-hidden">
+<div class="bg-critical-red h-full" style="width: 92%"></div>
+</div>
+<p class="text-[10px] mt-1 text-on-surface-variant">$2,850 of $3,000 threshold</p>
+</div>
+<div>
+<div class="flex justify-between items-end mb-2">
+<span class="text-sm font-bold text-on-surface">R&amp;D Core</span>
+<span class="text-xs text-on-surface-variant font-data-mono">65% utilized</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-2 overflow-hidden">
+<div class="bg-gemini-amber h-full" style="width: 65%"></div>
+</div>
+<p class="text-[10px] mt-1 text-on-surface-variant">$6,500 of $10,000 threshold</p>
+</div>
+<div>
+<div class="flex justify-between items-end mb-2">
+<span class="text-sm font-bold text-on-surface">Marketing Lab</span>
+<span class="text-xs text-on-surface-variant font-data-mono">24% utilized</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-2 overflow-hidden">
+<div class="bg-claude-emerald h-full" style="width: 24%"></div>
+</div>
+<p class="text-[10px] mt-1 text-on-surface-variant">$1,200 of $5,000 threshold</p>
+</div>
+</div>
+<button class="w-full mt-6 py-2 border border-outline-variant rounded-lg text-xs font-bold hover:bg-surface-container-high transition-colors">Adjust Allocations</button>
+</div>
+<!-- Per-User Trend Line -->
+<div class="bg-surface-container-low rounded-xl border border-outline-variant p-card-padding overflow-hidden relative group cursor-pointer">
+<div class="flex justify-between items-start mb-4">
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Highlighted Insight</p>
+<h4 class="font-bold text-on-surface">Daily Run Rate</h4>
+</div>
+<span class="text-critical-red font-data-mono text-sm">+18.5%</span>
+</div>
+<!-- Simplified SVG Trendline -->
+<div class="h-32 w-full mt-2">
+<svg class="w-full h-full" viewbox="0 0 400 100">
+<path class="drop-shadow-[0_0_8px_rgba(173,198,255,0.5)]" d="M0,80 Q50,75 100,85 T200,60 T300,40 T400,10" fill="none" stroke="#adc6ff" stroke-width="3"></path>
+<path d="M0,80 Q50,75 100,85 T200,60 T300,40 T400,10 L400,100 L0,100 Z" fill="url(#grad)" opacity="0.1"></path>
+<defs>
+<lineargradient id="grad" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#adc6ff;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#adc6ff;stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+<div class="mt-4 p-3 bg-surface-container-highest/30 rounded-lg border border-outline-variant/30">
+<p class="text-xs text-on-surface-variant italic">"Projected usage indicates current quota will be exhausted by Thursday 14:00 GMT."</p>
+</div>
+</div>
+<!-- Active Sessions Card -->
+<div class="bg-surface-container-low rounded-xl border border-outline-variant p-card-padding flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="cloud_sync">cloud_sync</span>
+<span class="absolute top-0 right-0 w-3 h-3 bg-secondary border-2 border-surface rounded-full"></span>
+</div>
+<div>
+<p class="text-on-surface-variant text-[10px] uppercase font-bold tracking-wider">Active Threads</p>
+<p class="text-2xl font-kpi-value text-on-surface">1,204</p>
+</div>
+</div>
+<button class="bg-primary p-2 rounded-full hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-on-primary-container" data-icon="open_in_new">open_in_new</span>
+</button>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-surface-container rounded-t-xl border-t border-outline-variant shadow-lg flex justify-around items-center h-16 px-2">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-label-sm font-label-sm">Dash</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-3 py-1 active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+<span class="text-label-sm font-label-sm">Users</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="view_in_ar">view_in_ar</span>
+<span class="text-label-sm font-label-sm">Models</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+<span class="text-label-sm font-label-sm">Keys</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="text-label-sm font-label-sm">Costs</span>
+</a>
+</nav>
+<!-- FAB (Only for main analysis context) -->
+<button class="fixed bottom-20 md:bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group" onclick="toggleDrawer()">
+<span class="material-symbols-outlined" data-icon="add_alert">add_alert</span>
+<span class="absolute right-full mr-4 bg-surface-container-high text-on-surface text-xs font-bold py-2 px-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-outline-variant shadow-xl">Signal Center</span>
+</button>
+<script>
+        function toggleDrawer() {
+            const drawer = document.getElementById('signal-center');
+            drawer.classList.toggle('translate-x-full');
+        }
+
+        // Simple random data pulse for scatter plot points
+        setInterval(() => {
+            const dots = document.querySelectorAll('.animate-pulse');
+            dots.forEach(dot => {
+                dot.style.transform = `scale(${0.95 + Math.random() * 0.1})`;
+            });
+        }, 1000);
+    </script>
+</body></html>
