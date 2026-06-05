@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { useI18n } from '../i18n.js';
 
 export interface KeyHealthCardProps {
   longUnused: number;
@@ -11,19 +12,20 @@ export function KeyHealthCard({
   highFrequency,
   abnormalGrowth,
 }: KeyHealthCardProps): JSX.Element {
+  const { t } = useI18n();
   return (
-    <section className="rounded-lg border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-base font-semibold text-neutral-950 dark:text-neutral-50">
-        Key Health
+    <section className="glass-panel rounded-3xl p-5">
+      <h2 className="text-2xl font-semibold tracking-[-0.02em] text-[var(--text)]">
+        {t('table.keyHealth')}
       </h2>
-      <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-        Summary of long-unused, high-frequency, and abnormal-growth API keys.
+      <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+        {t('table.keyHealthSubtitle')}
       </p>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-3">
-        <HealthStat label="Long Unused" value={longUnused} tone="amber" />
-        <HealthStat label="High Frequency" value={highFrequency} tone="blue" />
-        <HealthStat label="Abnormal Growth" value={abnormalGrowth} tone="red" />
+      <div className="mt-5 grid gap-4 sm:grid-cols-3">
+        <HealthStat label={t('health.longUnused')} value={longUnused} tone="amber" />
+        <HealthStat label={t('health.highFrequency')} value={highFrequency} tone="blue" />
+        <HealthStat label={t('health.abnormalGrowth')} value={abnormalGrowth} tone="red" />
       </div>
     </section>
   );
@@ -40,15 +42,15 @@ function HealthStat({
 }): JSX.Element {
   const toneClass =
     tone === 'amber'
-      ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300'
+      ? 'border-[rgba(217,119,6,0.18)] bg-[rgba(217,119,6,0.12)] text-[#ffca7a]'
       : tone === 'blue'
-        ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300'
-        : 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300';
+        ? 'border-[rgba(77,142,255,0.18)] bg-[rgba(77,142,255,0.12)] text-[var(--primary)]'
+        : 'border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.12)] text-[#ffb4ab]';
 
   return (
-    <div className={`rounded-lg px-4 py-4 ${toneClass}`}>
+    <div className={`rounded-2xl border px-4 py-4 ${toneClass}`}>
       <p className="text-sm font-medium">{label}</p>
-      <p className="mt-2 text-2xl font-semibold">{value}</p>
+      <p className="mt-3 text-4xl font-semibold tracking-[-0.03em]">{value}</p>
     </div>
   );
 }

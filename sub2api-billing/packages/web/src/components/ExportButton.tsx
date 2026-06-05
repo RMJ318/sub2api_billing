@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import { buildExportUrl } from '../lib/api.js';
+import { useI18n } from '../i18n.js';
 
 export interface ExportButtonProps {
   pageName: string;
@@ -12,6 +13,7 @@ export function ExportButton({
   billingMonth,
   disabled = false,
 }: ExportButtonProps): JSX.Element {
+  const { t } = useI18n();
   return (
     <a
       href={disabled ? undefined : buildExportUrl(pageName, billingMonth)}
@@ -22,7 +24,7 @@ export function ExportButton({
           : ''
       }`}
     >
-      Export CSV
+      {t('toolbar.export')}
     </a>
   );
 }

@@ -75,10 +75,10 @@ export function EChartCard({
   }, [loading, empty]);
 
   return (
-    <section className={`glass-panel rounded-3xl p-5 ${className ?? 'span-6'}`}>
+    <section className={`glass-panel rounded-[26px] p-5 ${className ?? 'span-6'}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="truncate text-lg font-semibold text-[var(--text)]">{title}</h2>
+          <h2 className="truncate text-xl font-semibold tracking-[-0.02em] text-[var(--text)]">{title}</h2>
           {subtitle ? (
             <div className="mt-1 text-sm leading-6 text-[var(--text-muted)]">{subtitle}</div>
           ) : null}

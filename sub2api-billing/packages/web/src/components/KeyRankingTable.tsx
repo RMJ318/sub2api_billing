@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { useI18n } from '../i18n.js';
 import { SearchBox } from './SearchBox.js';
 
 export interface KeyRankingRow {
@@ -25,65 +26,66 @@ export function KeyRankingTable({
   searchTerm = '',
   onSearchTermChange,
 }: KeyRankingTableProps): JSX.Element {
+  const { t } = useI18n();
   return (
-    <section className="rounded-lg border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="flex items-center justify-between gap-4">
+    <section className="glass-panel rounded-3xl p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h2 className="text-base font-semibold text-neutral-950 dark:text-neutral-50">
-            API Key Ranking
+          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-[var(--text)]">
+            {t('table.keyRanking')}
           </h2>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            Spend and usage by API key for the selected month.
+          <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+            {t('table.keyRankingSubtitle')}
           </p>
         </div>
         <SearchBox
           value={searchTerm}
           onChange={(value) => onSearchTermChange?.(value)}
-          placeholder="Search key"
+          placeholder={t('table.searchKey')}
         />
       </div>
 
-      <div className="mt-4 overflow-x-auto">
-        <table className="min-w-full divide-y divide-neutral-200 text-sm dark:divide-neutral-800">
+      <div className="mt-5 overflow-x-auto">
+        <table className="min-w-full border-separate border-spacing-0 text-sm">
           <thead>
-            <tr className="text-left text-neutral-500 dark:text-neutral-400">
-              <th className="pb-3 pr-4 font-medium">Key</th>
-              <th className="pb-3 pr-4 font-medium">Owner</th>
-              <th className="pb-3 pr-4 font-medium">Spend</th>
-              <th className="pb-3 font-medium">Requests</th>
+            <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">
+              <th className="border-b border-[var(--border-soft)] pb-4 pr-4">{t('table.key')}</th>
+              <th className="border-b border-[var(--border-soft)] pb-4 pr-4">{t('table.owner')}</th>
+              <th className="border-b border-[var(--border-soft)] pb-4 pr-4">{t('table.spend')}</th>
+              <th className="border-b border-[var(--border-soft)] pb-4">{t('table.requests')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100 dark:divide-neutral-900">
+          <tbody>
             {rows.map((row) => (
               <tr
                 key={row.apiKeyId}
                 className={
                   row.apiKeyId === selectedKeyId
-                    ? 'bg-neutral-100 dark:bg-neutral-800/50'
-                    : ''
+                    ? 'bg-white/6'
+                    : 'transition hover:bg-white/4'
                 }
               >
-                <td className="py-3 pr-4 font-medium text-neutral-950 dark:text-neutral-50">
+                <td className="border-b border-[rgba(66,71,84,0.45)] py-4 pr-4 font-medium text-[var(--text)]">
                   <button
                     type="button"
                     onClick={() => onSelectKey?.(row.apiKeyId)}
-                    className="text-left hover:underline"
+                    className="text-left transition hover:text-[var(--primary)]"
                   >
                     <span>{row.apiKeyName || row.apiKeyId}</span>
                   </button>
                   {row.deleted ? (
-                    <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-950/40 dark:text-red-300">
-                      Deleted
+                    <span className="ml-2 rounded-full border border-[rgba(239,68,68,0.35)] bg-[rgba(239,68,68,0.12)] px-2 py-0.5 text-[11px] font-semibold text-[#ffb4ab]">
+                      {t('table.deleted')}
                     </span>
                   ) : null}
                 </td>
-                <td className="py-3 pr-4 text-neutral-600 dark:text-neutral-300">
+                <td className="border-b border-[rgba(66,71,84,0.45)] py-4 pr-4 text-[var(--text-muted)]">
                   {row.ownerLabel}
                 </td>
-                <td className="py-3 pr-4 text-neutral-600 dark:text-neutral-300">
+                <td className="border-b border-[rgba(66,71,84,0.45)] py-4 pr-4 text-[var(--text-muted)]">
                   ${row.spend}
                 </td>
-                <td className="py-3 text-neutral-600 dark:text-neutral-300">
+                <td className="border-b border-[rgba(66,71,84,0.45)] py-4 text-[var(--text-muted)]">
                   {row.requestCount.toLocaleString()}
                 </td>
               </tr>
@@ -92,9 +94,9 @@ export function KeyRankingTable({
               <tr>
                 <td
                   colSpan={4}
-                  className="py-6 text-center text-sm text-neutral-500 dark:text-neutral-400"
+                  className="py-10 text-center text-sm text-[var(--text-dim)]"
                 >
-                  No API keys match the current search.
+                  {t('table.emptyKeys')}
                 </td>
               </tr>
             ) : null}

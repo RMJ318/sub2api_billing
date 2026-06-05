@@ -5,6 +5,7 @@ export interface DashboardSummaryCardProps {
   value: ReactNode;
   hint?: ReactNode;
   className?: string;
+  change?: ReactNode;
 }
 
 const ACCENT_BY_TITLE: Record<string, string> = {
@@ -23,17 +24,23 @@ export function DashboardSummaryCard({
   value,
   hint,
   className,
+  change,
 }: DashboardSummaryCardProps): JSX.Element {
   const accentClass = ACCENT_BY_TITLE[title] ?? 'text-[var(--text)]';
 
   return (
-    <section className={`glass-panel rounded-3xl p-5 ${className ?? 'span-3'}`}>
+    <section className={`glass-panel rounded-[26px] p-5 ${className ?? 'span-3'}`}>
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-dim)]">
             {title}
           </p>
-          <p className={`kpi-value mt-3 text-3xl font-bold ${accentClass}`}>{value}</p>
+          <p className={`kpi-value mt-3 truncate text-[2rem] font-bold leading-none ${accentClass}`}>
+            {value}
+          </p>
+          {change ? (
+            <p className="mt-3 text-sm font-semibold text-[var(--secondary)]">{change}</p>
+          ) : null}
         </div>
         <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-white/6 ${accentClass}`}>
           <SparkIcon />

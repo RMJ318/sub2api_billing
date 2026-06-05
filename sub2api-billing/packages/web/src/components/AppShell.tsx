@@ -1,5 +1,6 @@
 import { useState, type JSX, type ReactNode } from 'react';
 import { useTheme } from '../hooks/useTheme.js';
+import { useI18n } from '../i18n.js';
 
 /** Navigation link definition. */
 interface NavLink {
@@ -32,26 +33,27 @@ export function AppShell({
   onNavigate,
 }: AppShellProps): JSX.Element {
   const { theme, toggleTheme } = useTheme();
+  const { locale, setLocale, t } = useI18n();
   const [navOpen, setNavOpen] = useState(false);
 
   return (
     <div className="app-shell-bg min-h-screen text-[var(--text)]">
-      <aside className="glass-panel custom-scrollbar fixed inset-y-0 left-0 z-40 hidden h-screen w-64 flex-col border-r border-[var(--border-soft)] md:flex">
-        <div className="px-6 py-7">
+      <aside className="glass-panel custom-scrollbar fixed inset-y-0 left-0 z-40 hidden h-screen w-[240px] flex-col border-r border-[var(--border-soft)] md:flex">
+        <div className="px-5 py-6">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(173,198,255,0.12)] text-[var(--primary)]">
               <AnalyticsIcon />
             </div>
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-dim)]">
-                Synthetix
+                {t('shell.brandSub')}
               </p>
-              <h1 className="mt-1 text-xl font-semibold text-[var(--text)]">AI Usage Analytics</h1>
+              <h1 className="mt-1 text-xl font-semibold text-[var(--text)]">{t('shell.brand')}</h1>
             </div>
           </div>
         </div>
 
-        <nav aria-label="Main navigation" className="flex-1 px-4">
+        <nav aria-label="Main navigation" className="flex-1 px-3">
           <ul className="space-y-2">
             {NAV_LINKS.map((link) => {
               const active = activePath === link.path;
@@ -67,7 +69,17 @@ export function AppShell({
                     }`}
                   >
                     <span className="opacity-90">{link.icon}</span>
-                    <span>{link.label}</span>
+                    <span>
+                      {link.path === '/'
+                        ? t('nav.dashboard')
+                        : link.path === '/users'
+                          ? t('nav.users')
+                          : link.path === '/models'
+                            ? t('nav.models')
+                            : link.path === '/keys'
+                              ? t('nav.keys')
+                              : t('nav.cost')}
+                    </span>
                   </button>
                 </li>
               );
@@ -75,22 +87,22 @@ export function AppShell({
           </ul>
         </nav>
 
-        <div className="mt-6 border-t border-[var(--border-soft)] p-4">
+        <div className="mt-6 border-t border-[var(--border-soft)] p-3">
           <div className="panel-muted flex items-center gap-3 rounded-2xl p-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(77,142,255,0.2)] text-sm font-bold text-[var(--primary)]">
               AU
             </div>
             <div>
-              <p className="text-sm font-semibold text-[var(--text)]">Admin User</p>
-              <p className="text-xs text-[var(--text-dim)]">System Architect</p>
+              <p className="text-sm font-semibold text-[var(--text)]">{t('user.admin')}</p>
+              <p className="text-xs text-[var(--text-dim)]">{t('user.role')}</p>
             </div>
           </div>
         </div>
       </aside>
 
-      <div className="min-h-screen min-w-0 md:pl-64">
-        <header className="glass-panel sticky top-0 z-30 border-b border-[var(--border-soft)]">
-          <div className="flex min-h-[74px] items-center justify-between gap-4 px-4 py-3 md:px-8">
+      <div className="min-h-screen min-w-0 md:pl-[240px]">
+        <header className="sticky top-0 z-30 border-b border-[var(--border-soft)] bg-[rgba(13,19,34,0.86)] backdrop-blur-xl">
+          <div className="flex min-h-[72px] items-center justify-between gap-4 px-4 py-3 md:px-8">
             <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
@@ -102,15 +114,26 @@ export function AppShell({
               </button>
               <div className="min-w-0">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-dim)]">
-                  Enterprise cockpit
+                  {t('shell.headerEyebrow')}
                 </p>
-                <h2 className="truncate text-xl font-semibold text-[var(--text)] md:text-2xl">
-                  Usage Analytics
+                <h2 className="truncate text-lg font-semibold text-[var(--text)] md:text-xl">
+                  {t('shell.headerTitle')}
                 </h2>
               </div>
             </div>
 
             <div className="flex items-center gap-2 md:gap-3">
+              <label className="hidden items-center gap-2 rounded-2xl border border-[var(--border)] bg-white/5 px-3 py-2 text-sm font-medium text-[var(--text-muted)] lg:inline-flex">
+                <span className="text-xs text-[var(--text-dim)]">{t('lang.label')}</span>
+                <select
+                  className="bg-transparent text-sm text-[var(--text)] outline-none"
+                  value={locale}
+                  onChange={(event) => setLocale(event.target.value as 'zh-CN' | 'en-US')}
+                >
+                  <option value="zh-CN">{t('lang.zh')}</option>
+                  <option value="en-US">{t('lang.en')}</option>
+                </select>
+              </label>
               <button
                 type="button"
                 aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
@@ -118,7 +141,7 @@ export function AppShell({
                 onClick={toggleTheme}
               >
                 {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-                <span className="hidden sm:inline">Theme</span>
+                <span className="hidden sm:inline">{t('shell.theme')}</span>
               </button>
               <button
                 type="button"
@@ -146,7 +169,7 @@ export function AppShell({
           <nav className="glass-panel absolute inset-y-0 left-0 w-72 border-r border-[var(--border-soft)] p-4">
             <div className="mb-4 flex items-center justify-between">
               <span className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text-dim)]">
-                Navigation
+                {t('shell.nav')}
               </span>
               <button
                 type="button"
@@ -174,7 +197,15 @@ export function AppShell({
                       }`}
                     >
                       {link.icon}
-                      {link.label}
+                      {link.path === '/'
+                        ? t('nav.dashboard')
+                        : link.path === '/users'
+                          ? t('nav.users')
+                          : link.path === '/models'
+                            ? t('nav.models')
+                            : link.path === '/keys'
+                              ? t('nav.keys')
+                              : t('nav.cost')}
                     </button>
                   </li>
                 );

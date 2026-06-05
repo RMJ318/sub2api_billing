@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import type { UserAggregatesResponse } from '../lib/api.js';
+import { useI18n } from '../i18n.js';
 import { SearchBox } from './SearchBox.js';
 
 export interface UserRankingTableProps {
@@ -17,21 +18,22 @@ export function UserRankingTable({
   searchTerm = '',
   onSearchTermChange,
 }: UserRankingTableProps): JSX.Element {
+  const { t } = useI18n();
   return (
     <section className="glass-panel rounded-3xl p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 className="text-2xl font-semibold tracking-[-0.02em] text-[var(--text)]">
-            User Ranking
+            {t('table.userRanking')}
           </h2>
           <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-            Top users by spend for the selected month.
+            {t('table.userRankingSubtitle')}
           </p>
         </div>
         <SearchBox
           value={searchTerm}
           onChange={(value) => onSearchTermChange?.(value)}
-          placeholder="Search user"
+          placeholder={t('table.searchUser')}
         />
       </div>
 
@@ -39,11 +41,11 @@ export function UserRankingTable({
         <table className="min-w-full border-separate border-spacing-0 text-sm">
           <thead>
             <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">
-              <th className="border-b border-[var(--border-soft)] pb-4 pr-4">User</th>
-              <th className="border-b border-[var(--border-soft)] pb-4 pr-4">Spend</th>
-              <th className="border-b border-[var(--border-soft)] pb-4 pr-4">Requests</th>
-              <th className="border-b border-[var(--border-soft)] pb-4 pr-4">Tokens</th>
-              <th className="border-b border-[var(--border-soft)] pb-4">API Keys</th>
+              <th className="border-b border-[var(--border-soft)] pb-4 pr-4">{t('table.user')}</th>
+              <th className="border-b border-[var(--border-soft)] pb-4 pr-4">{t('table.spend')}</th>
+              <th className="border-b border-[var(--border-soft)] pb-4 pr-4">{t('table.requests')}</th>
+              <th className="border-b border-[var(--border-soft)] pb-4 pr-4">{t('table.tokens')}</th>
+              <th className="border-b border-[var(--border-soft)] pb-4">{t('table.apiKeys')}</th>
             </tr>
           </thead>
           <tbody>
@@ -85,7 +87,7 @@ export function UserRankingTable({
                   colSpan={5}
                   className="py-10 text-center text-sm text-[var(--text-dim)]"
                 >
-                  No users match the current search.
+                  {t('table.emptyUsers')}
                 </td>
               </tr>
             ) : null}

@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { useI18n } from '../i18n.js';
 
 export interface SearchBoxProps {
   value: string;
@@ -11,12 +12,13 @@ export function SearchBox({
   onChange,
   placeholder = 'Search',
 }: SearchBoxProps): JSX.Element {
+  const { t } = useI18n();
   return (
     <input
       type="search"
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      placeholder={placeholder}
+      placeholder={placeholder === 'Search' ? t('table.searchUser') : placeholder}
       className="app-input w-full max-w-56"
     />
   );

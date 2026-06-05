@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { useI18n } from '../i18n.js';
 
 export interface SignalDrawerItem {
   id: string;
@@ -24,6 +25,7 @@ export function SignalDrawer({
   onClose,
   onNavigate,
 }: SignalDrawerProps): JSX.Element | null {
+  const { t } = useI18n();
   if (!open) {
     return null;
   }
@@ -45,9 +47,9 @@ export function SignalDrawer({
               <SignalIcon />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-[var(--text)]">Signal Center</h2>
+              <h2 className="text-xl font-semibold text-[var(--text)]">{t('signal.center')}</h2>
               <p className="mt-1 text-sm text-[var(--text-muted)]">
-                Alerts, anomalies, and risk hints for the current dataset.
+                {t('signal.summary')}
               </p>
             </div>
           </div>
@@ -61,9 +63,25 @@ export function SignalDrawer({
         </div>
 
         <div className="flex-1 space-y-6 px-6 py-6">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="panel-muted rounded-2xl p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">
+                {t('signal.unread')}
+              </p>
+              <p className="mt-2 text-3xl font-semibold text-[var(--text)]">{signals.length}</p>
+            </div>
+            <div className="panel-muted rounded-2xl p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">
+                {t('signal.focus')}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+                {t('signal.summary')}
+              </p>
+            </div>
+          </div>
           {signals.length === 0 ? (
             <div className="panel-muted rounded-3xl border border-dashed border-[var(--border-soft)] px-5 py-10 text-sm text-[var(--text-muted)]">
-              No signals available.
+              {t('signal.empty')}
             </div>
           ) : (
             [...groupedSignals.entries()].map(([group, items]) => (
@@ -112,7 +130,7 @@ export function SignalDrawer({
             className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--primary)] px-4 py-3 text-sm font-bold text-[#002e6a] transition hover:brightness-110"
           >
             <HistoryIcon />
-            Audit Signal History
+            {t('signal.history')}
           </button>
         </div>
       </aside>

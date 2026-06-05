@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './index.css';
 import { App } from './App.js';
+import { I18nProvider } from './i18n.js';
 
 /**
  * Web entry point. Mounts the React tree and loads the Tailwind stylesheet so
@@ -20,7 +21,9 @@ const queryClient = new QueryClient();
 createRoot(container).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <I18nProvider>
+        <App />
+      </I18nProvider>
     </QueryClientProvider>
   </StrictMode>,
 );
