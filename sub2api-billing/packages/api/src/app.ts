@@ -111,7 +111,7 @@ function parseDateRange(
     return { valid: false, error: `dateEnd is not a valid date: "${endStr}".` };
   }
 
-  if (!isValidDateRange(start, end)) {
+  if (!isValidDateRange({ start, end })) {
     return { valid: false, error: 'dateStart must not be after dateEnd.' };
   }
 
@@ -227,56 +227,71 @@ export function buildApp(deps?: AppDependencies): FastifyInstance {
       return reply.status(400).send({ error: 'csvText is required.' });
     }
 
-    const schema =
-      fileName === 'monthly_user_summary.csv'
-        ? monthlySummarySchema
-        : fileName === 'daily_user_usage.csv'
-          ? dailyUsageSchema
-          : fileName === 'model_user_usage.csv'
-            ? modelUsageSchema
-            : fileName === 'api_key_usage.csv'
-              ? keyUsageSchema
-              : requestDetailSchema;
-
-    const parseResult = parseCsv(csvText, schema);
-    const normalizedRecords = parseResult.records.map((record) => {
-      const candidate = record as { billing_month?: string | null };
-      if (candidate.billing_month == null) {
-        candidate.billing_month = '';
-      }
-      return fillBillingMonthFromFolder(
-        candidate as { billing_month: string },
-        monthResult.value,
+    const normalizeParsedRecords = <T extends { billing_month?: string | null }>(records: T[]) =>
+      records.map((record) =>
+        fillBillingMonthFromFolder(
+          {
+            ...record,
+            billing_month: record.billing_month ?? '',
+          },
+          monthResult.value,
+        ),
       );
-    });
 
-    if (fileName === 'request_detail.csv') {
-      if (!duckDbConnection) {
-        return reply.status(503).send({ error: 'Request detail store is not available.' });
+    let recordsLoaded = 0;
+    let rowsRejected = 0;
+
+    switch (fileName) {
+      case 'monthly_user_summary.csv': {
+        const parseResult = parseCsv(csvText, monthlySummarySchema);
+        const normalizedRecords = normalizeParsedRecords(parseResult.records);
+        store.load({ monthlySummaries: normalizedRecords });
+        recordsLoaded = normalizedRecords.length;
+        rowsRejected = parseResult.rows.filter((row) => row.failures.length > 0).length;
+        break;
       }
-      await insertRequestDetailRecords(duckDbConnection, normalizedRecords as never[]);
-    } else {
-      switch (fileName) {
-        case 'monthly_user_summary.csv':
-          store.load({ monthlySummaries: normalizedRecords as never[] });
-          break;
-        case 'daily_user_usage.csv':
-          store.load({ dailyUsage: normalizedRecords as never[] });
-          break;
-        case 'model_user_usage.csv':
-          store.load({ modelUsage: normalizedRecords as never[] });
-          break;
-        case 'api_key_usage.csv':
-          store.load({ keyUsage: normalizedRecords as never[] });
-          break;
+      case 'daily_user_usage.csv': {
+        const parseResult = parseCsv(csvText, dailyUsageSchema);
+        const normalizedRecords = normalizeParsedRecords(parseResult.records);
+        store.load({ dailyUsage: normalizedRecords });
+        recordsLoaded = normalizedRecords.length;
+        rowsRejected = parseResult.rows.filter((row) => row.failures.length > 0).length;
+        break;
+      }
+      case 'model_user_usage.csv': {
+        const parseResult = parseCsv(csvText, modelUsageSchema);
+        const normalizedRecords = normalizeParsedRecords(parseResult.records);
+        store.load({ modelUsage: normalizedRecords });
+        recordsLoaded = normalizedRecords.length;
+        rowsRejected = parseResult.rows.filter((row) => row.failures.length > 0).length;
+        break;
+      }
+      case 'api_key_usage.csv': {
+        const parseResult = parseCsv(csvText, keyUsageSchema);
+        const normalizedRecords = normalizeParsedRecords(parseResult.records);
+        store.load({ keyUsage: normalizedRecords });
+        recordsLoaded = normalizedRecords.length;
+        rowsRejected = parseResult.rows.filter((row) => row.failures.length > 0).length;
+        break;
+      }
+      case 'request_detail.csv': {
+        if (!duckDbConnection) {
+          return reply.status(503).send({ error: 'Request detail store is not available.' });
+        }
+        const parseResult = parseCsv(csvText, requestDetailSchema);
+        const normalizedRecords = normalizeParsedRecords(parseResult.records);
+        await insertRequestDetailRecords(duckDbConnection, normalizedRecords);
+        recordsLoaded = normalizedRecords.length;
+        rowsRejected = parseResult.rows.filter((row) => row.failures.length > 0).length;
+        break;
       }
     }
 
     return {
       billingMonth: monthResult.value,
       fileName,
-      recordsLoaded: normalizedRecords.length,
-      rowsRejected: parseResult.rows.filter((row) => row.failures.length > 0).length,
+      recordsLoaded,
+      rowsRejected,
     };
   });
 

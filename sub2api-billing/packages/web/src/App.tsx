@@ -14,6 +14,7 @@ import { SignalDrawer } from './components/SignalDrawer.js';
 import { UserRankingTable } from './components/UserRankingTable.js';
 import { useI18n } from './i18n.js';
 import { importCsvFile } from './lib/api.js';
+import { AdvancedAnalyticsPage } from './pages/AdvancedAnalyticsPage.js';
 import {
   useCost,
   useDashboard,
@@ -43,29 +44,39 @@ export function App(): JSX.Element {
   const [importMessage, setImportMessage] = useState<string | null>(null);
 
   const monthsQuery = useMonths();
-  const months = useMemo(
-    () => monthsQuery.data?.months ?? ['2026-05', '2026-04'],
-    [monthsQuery.data],
-  );
+  const months = useMemo(() => monthsQuery.data?.months ?? ['2026-05', '2026-04'], [monthsQuery.data]);
   const [billingMonth, setBillingMonth] = useState('');
 
-  const healthQuery = useHealth();
+  const previousBillingMonth = useMemo(() => {
+    const currentIndex = months.indexOf(billingMonth);
+    if (currentIndex < 0) return null;
+    return months[currentIndex + 1] ?? null;
+  }, [billingMonth, months]);
+
   const dashboardQuery = useDashboard(billingMonth || null);
+  const previousDashboardQuery = useDashboard(previousBillingMonth);
   const usersQuery = useUsers(billingMonth || null);
+  const previousUsersQuery = useUsers(previousBillingMonth);
   const userTrendQuery = useUserTrend(billingMonth || null, selectedUserId);
   const keysQuery = useKeys(billingMonth || null);
   const keyTrendQuery = useKeyTrend(billingMonth || null, selectedKeyId);
   const modelsQuery = useModels(billingMonth || null);
+  const previousModelsQuery = useModels(previousBillingMonth);
   const costQuery = useCost(billingMonth || null);
+  const previousCostQuery = useCost(previousBillingMonth);
   const signalsQuery = useSignals(billingMonth || null);
 
   const dashboardData = dashboardQuery.data;
+  const previousDashboardData = previousDashboardQuery.data;
   const usersData = usersQuery.data;
+  const previousUsersData = previousUsersQuery.data;
   const userTrendData = userTrendQuery.data;
   const keysData = keysQuery.data;
   const keyTrendData = keyTrendQuery.data;
   const modelsData = modelsQuery.data;
+  const previousModelsData = previousModelsQuery.data;
   const costData = costQuery.data;
+  const previousCostData = previousCostQuery.data;
   const signalsData = signalsQuery.data;
   const hasDashboardData = dashboardData !== undefined;
 
@@ -133,9 +144,7 @@ export function App(): JSX.Element {
   const filterTrendPoints = (
     points: Array<{ bucket: string; value: string }>,
   ): Array<{ bucket: string; value: string }> => {
-    if (dateRangeValidationMessage) {
-      return [];
-    }
+    if (dateRangeValidationMessage) return [];
     return points.filter((point) => {
       if (dateStart && point.bucket < dateStart) return false;
       if (dateEnd && point.bucket > dateEnd) return false;
@@ -145,13 +154,13 @@ export function App(): JSX.Element {
 
   const filteredUserRankings = useMemo(() => {
     const needle = userSearchTerm.trim().toLowerCase();
-    if (needle.length === 0) return safeUsersData.rankings;
+    if (!needle) return safeUsersData.rankings;
     return safeUsersData.rankings.filter((row) => row.label.toLowerCase().includes(needle));
   }, [safeUsersData.rankings, userSearchTerm]);
 
   const filteredKeyRankings = useMemo(() => {
     const needle = keySearchTerm.trim().toLowerCase();
-    if (needle.length === 0) return safeKeysData.rankings;
+    if (!needle) return safeKeysData.rankings;
     return safeKeysData.rankings.filter((row) =>
       `${row.apiKeyName ?? ''} ${row.ownerLabel}`.toLowerCase().includes(needle),
     );
@@ -160,44 +169,31 @@ export function App(): JSX.Element {
   const exportPageName =
     activePath === '/'
       ? 'dashboard'
-      : activePath === '/users'
-        ? 'users'
-        : activePath === '/models'
-          ? 'models'
-          : activePath === '/keys'
-            ? 'keys'
-            : activePath === '/cost'
-              ? 'cost'
-              : 'dashboard';
+      : activePath === '/advanced-analytics'
+        ? 'advanced-analytics'
+        : activePath === '/users'
+          ? 'users'
+          : activePath === '/models'
+            ? 'models'
+            : activePath === '/keys'
+              ? 'keys'
+              : activePath === '/cost'
+                ? 'cost'
+                : 'dashboard';
 
   const pageMetaByPath: Record<string, { eyebrow: string; title: string; description: string }> = {
-    '/': {
-      eyebrow: t('page.usageAnalytics'),
-      title: t('page.usageAnalytics'),
-      description: t('page.description'),
+    '/': { eyebrow: t('page.usageAnalytics'), title: t('page.usageAnalytics'), description: t('page.description') },
+    '/advanced-analytics': {
+      eyebrow: 'Advanced Analytics',
+      title: 'Advanced Analytics',
+      description: '深度分析用户 API 使用行为、成本结构、增长趋势与异常风险。',
     },
-    '/users': {
-      eyebrow: t('nav.users'),
-      title: t('nav.users'),
-      description: t('page.description'),
-    },
-    '/keys': {
-      eyebrow: t('nav.keys'),
-      title: t('nav.keys'),
-      description: t('page.description'),
-    },
-    '/models': {
-      eyebrow: t('nav.models'),
-      title: t('nav.models'),
-      description: t('page.description'),
-    },
-    '/cost': {
-      eyebrow: t('nav.cost'),
-      title: t('nav.cost'),
-      description: t('page.description'),
-    },
+    '/users': { eyebrow: t('nav.users'), title: t('nav.users'), description: t('page.description') },
+    '/keys': { eyebrow: t('nav.keys'), title: t('nav.keys'), description: t('page.description') },
+    '/models': { eyebrow: t('nav.models'), title: t('nav.models'), description: t('page.description') },
+    '/cost': { eyebrow: t('nav.cost'), title: t('nav.cost'), description: t('page.description') },
   };
-  const pageMeta = pageMetaByPath[activePath] ?? pageMetaByPath['/'];
+  const pageMeta = pageMetaByPath[activePath] ?? pageMetaByPath['/']!;
 
   const formatMoney = (value: string | number | undefined): string => {
     if (value === undefined) return t('status.unavailable');
@@ -281,27 +277,13 @@ export function App(): JSX.Element {
     const requestPoints = filterTrendPoints(dashboardData.dailyTrends.requests);
     return {
       tooltip: { trigger: 'axis' },
-      legend: {
-        data: [t('kpi.totalSpend'), t('kpi.totalRequests')],
-        textStyle: { color: '#64748b' },
-      },
+      legend: { data: [t('kpi.totalSpend'), t('kpi.totalRequests')], textStyle: { color: '#64748b' } },
       grid: { left: 36, right: 20, top: 42, bottom: 30 },
       xAxis: { type: 'category', boundaryGap: false, data: spendPoints.map((point) => point.bucket) },
       yAxis: [{ type: 'value' }, { type: 'value' }],
       series: [
-        {
-          name: t('kpi.totalSpend'),
-          type: 'line',
-          smooth: true,
-          data: spendPoints.map((point) => Number(point.value)),
-        },
-        {
-          name: t('kpi.totalRequests'),
-          type: 'line',
-          yAxisIndex: 1,
-          smooth: true,
-          data: requestPoints.map((point) => Number(point.value)),
-        },
+        { name: t('kpi.totalSpend'), type: 'line', smooth: true, data: spendPoints.map((point) => Number(point.value)) },
+        { name: t('kpi.totalRequests'), type: 'line', yAxisIndex: 1, smooth: true, data: requestPoints.map((point) => Number(point.value)) },
       ],
     };
   }, [dashboardData, dateEnd, dateRangeValidationMessage, dateStart, t]);
@@ -313,16 +295,8 @@ export function App(): JSX.Element {
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
       grid: { left: 120, right: 24, top: 16, bottom: 16 },
       xAxis: { type: 'value' },
-      yAxis: {
-        type: 'category',
-        data: topUsers.map((item) => item.label),
-      },
-      series: [
-        {
-          type: 'bar',
-          data: topUsers.map((item) => Number(item.spend)),
-        },
-      ],
+      yAxis: { type: 'category', data: topUsers.map((item) => item.label) },
+      series: [{ type: 'bar', data: topUsers.map((item) => Number(item.spend)) }],
     };
   }, [dashboardData]);
 
@@ -335,20 +309,9 @@ export function App(): JSX.Element {
         {
           type: 'pie',
           radius: ['48%', '72%'],
-          label: {
-            color: '#8c909f',
-            fontSize: 12,
-          },
-          labelLine: {
-            lineStyle: {
-              color: '#64748b',
-              opacity: 0.8,
-            },
-          },
-          itemStyle: {
-            borderColor: '#1e293b',
-            borderWidth: 2,
-          },
+          label: { color: '#8c909f', fontSize: 12 },
+          labelLine: { lineStyle: { color: '#64748b', opacity: 0.8 } },
+          itemStyle: { borderColor: '#1e293b', borderWidth: 2 },
           data: [
             { name: 'GPT', value: Number(dashboardData.modelFamilyShare.GPT) },
             { name: 'Claude', value: Number(dashboardData.modelFamilyShare.Claude) },
@@ -368,14 +331,14 @@ export function App(): JSX.Element {
       xAxis: { type: 'category', data: ['Cost Mix'] },
       yAxis: { type: 'value' },
       series: [
-        { name: 'Input', type: 'bar', stack: 'cost', data: [Number(dashboardData.costComposition.input)] },
-        { name: 'Output', type: 'bar', stack: 'cost', data: [Number(dashboardData.costComposition.output)] },
-        { name: 'Cache Create', type: 'bar', stack: 'cost', data: [Number(dashboardData.costComposition.cacheCreation)] },
-        { name: 'Cache Read', type: 'bar', stack: 'cost', data: [Number(dashboardData.costComposition.cacheRead)] },
-        { name: 'Image', type: 'bar', stack: 'cost', data: [Number(dashboardData.costComposition.imageOutput)] },
+        { name: t('cost.input'), type: 'bar', stack: 'cost', data: [Number(dashboardData.costComposition.input)] },
+        { name: t('cost.output'), type: 'bar', stack: 'cost', data: [Number(dashboardData.costComposition.output)] },
+        { name: t('cost.cacheCreate'), type: 'bar', stack: 'cost', data: [Number(dashboardData.costComposition.cacheCreation)] },
+        { name: t('cost.cacheRead'), type: 'bar', stack: 'cost', data: [Number(dashboardData.costComposition.cacheRead)] },
+        { name: t('cost.image'), type: 'bar', stack: 'cost', data: [Number(dashboardData.costComposition.imageOutput)] },
       ],
     };
-  }, [dashboardData]);
+  }, [dashboardData, t]);
 
   const userScatterOption = useMemo<EChartsOption | undefined>(() => {
     if (!usersData) return undefined;
@@ -383,12 +346,7 @@ export function App(): JSX.Element {
       tooltip: { trigger: 'item' },
       xAxis: { type: 'value', name: t('kpi.totalRequests') },
       yAxis: { type: 'value', name: t('kpi.totalSpend') },
-      series: [
-        {
-          type: 'scatter',
-          data: safeUsersData.activityScatter.map((point) => [point.x, point.y, point.size, point.label]),
-        },
-      ],
+      series: [{ type: 'scatter', data: safeUsersData.activityScatter.map((point) => [point.x, point.y, point.size, point.label]) }],
     };
   }, [safeUsersData.activityScatter, t, usersData]);
 
@@ -444,12 +402,12 @@ export function App(): JSX.Element {
       xAxis: { type: 'category', data: rows.map((item) => item.model), axisLabel: { rotate: 20 } },
       yAxis: { type: 'value' },
       series: [
-        { name: 'Input', type: 'bar', stack: 'tokens', data: rows.map((item) => item.inputTokens) },
-        { name: 'Output', type: 'bar', stack: 'tokens', data: rows.map((item) => item.outputTokens) },
-        { name: 'Cache Read', type: 'bar', stack: 'tokens', data: rows.map((item) => item.cacheReadTokens) },
+        { name: t('cost.input'), type: 'bar', stack: 'tokens', data: rows.map((item) => item.inputTokens) },
+        { name: t('cost.output'), type: 'bar', stack: 'tokens', data: rows.map((item) => item.outputTokens) },
+        { name: t('cost.cacheRead'), type: 'bar', stack: 'tokens', data: rows.map((item) => item.cacheReadTokens) },
       ],
     };
-  }, [modelsData, safeModelsData.tokenStacks]);
+  }, [modelsData, safeModelsData.tokenStacks, t]);
 
   const costTrendOption = useMemo<EChartsOption | undefined>(() => {
     if (!costData) return undefined;
@@ -458,9 +416,9 @@ export function App(): JSX.Element {
       tooltip: { trigger: 'axis' },
       xAxis: { type: 'category', boundaryGap: false, data: spendPoints.map((item) => item.bucket) },
       yAxis: { type: 'value' },
-      series: [{ name: 'Daily Spend', type: 'line', smooth: true, data: spendPoints.map((item) => Number(item.value)) }],
+      series: [{ name: t('chart.costTrend'), type: 'line', smooth: true, data: spendPoints.map((item) => Number(item.value)) }],
     };
-  }, [costData, dateEnd, dateRangeValidationMessage, dateStart, safeCostData.trend.daily]);
+  }, [costData, dateEnd, dateRangeValidationMessage, dateStart, safeCostData.trend.daily, t]);
 
   const paretoOption = useMemo<EChartsOption | undefined>(() => {
     if (!costData) return undefined;
@@ -479,9 +437,9 @@ export function App(): JSX.Element {
       series: [
         {
           type: 'treemap',
-          roam: false,
-          nodeClick: false,
-          breadcrumb: { show: false },
+          roam: true,
+          nodeClick: 'zoomToNode',
+          breadcrumb: { show: true },
           data: safeCostData.treemap.map((userNode) => ({
             ...userNode,
             value: Number(userNode.value ?? '0'),
@@ -505,42 +463,40 @@ export function App(): JSX.Element {
       onNavigate={setActivePath}
       unreadCount={signalsData?.unreadCount ?? 0}
       onBellClick={() => setDrawerOpen((prev) => !prev)}
+      headerActions={
+        <>
+          <BillingMonthSelector
+            months={months}
+            value={billingMonth}
+            onChange={setBillingMonth}
+            disabled={dashboardQuery.isLoading || monthsQuery.isLoading}
+          />
+          <DateRangeFilter
+            start={dateStart}
+            end={dateEnd}
+            onStartChange={setDateStart}
+            onEndChange={setDateEnd}
+            validationMessage={dateRangeValidationMessage}
+          />
+        </>
+      }
     >
-      <section className="span-12">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-dim)]">
-                {t('page.usageAnalytics')}
-              </p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] md:text-4xl">
-                {billingMonth ? t('page.billingOverview', { month: billingMonth }) : pageMeta.title}
-              </h1>
-              <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-                {pageMeta.description}
-              </p>
-            </div>
-          </div>
-
-          <div className="glass-panel rounded-[26px] px-4 py-4">
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-              <div className="flex flex-1 flex-wrap items-center gap-3">
-                <BillingMonthSelector
-                  months={months}
-                  value={billingMonth}
-                  onChange={setBillingMonth}
-                  disabled={dashboardQuery.isLoading || monthsQuery.isLoading}
-                />
-                <DateRangeFilter
-                  start={dateStart}
-                  end={dateEnd}
-                  onStartChange={setDateStart}
-                  onEndChange={setDateEnd}
-                  validationMessage={dateRangeValidationMessage}
-                />
+      {activePath !== '/advanced-analytics' ? (
+        <section className="span-12">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-dim)]">
+                  {pageMeta.eyebrow}
+                </p>
+                <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] md:text-4xl">
+                  {billingMonth ? t('page.billingOverview', { month: billingMonth }) : pageMeta.title}
+                </h1>
+                <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">{pageMeta.description}</p>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="inline-flex h-12 cursor-pointer items-center rounded-2xl border border-[var(--border-soft)] bg-white/5 px-4 text-sm font-medium text-[var(--text-muted)] transition hover:bg-white/10 hover:text-[var(--text)]">
+
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="inline-flex h-10 cursor-pointer items-center rounded-2xl border border-[var(--border-soft)] bg-white/5 px-4 text-sm font-medium text-[var(--text-muted)] transition hover:bg-white/10 hover:text-[var(--text)]">
                   <input
                     type="file"
                     accept=".csv,text/csv"
@@ -551,95 +507,35 @@ export function App(): JSX.Element {
                   />
                   {importing ? t('toolbar.importing') : t('toolbar.import')}
                 </label>
-                <ExportButton
-                  pageName={exportPageName}
-                  billingMonth={billingMonth}
-                  disabled={!billingMonth}
-                />
+                <ExportButton pageName={exportPageName} billingMonth={billingMonth} disabled={!billingMonth} />
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="inline-flex h-12 items-center rounded-2xl border border-[var(--border-soft)] bg-white/5 px-4 text-sm font-medium text-[var(--text-muted)] transition hover:bg-white/10 hover:text-[var(--text)]"
+                  className="inline-flex h-10 items-center rounded-2xl border border-[var(--border-soft)] bg-white/5 px-4 text-sm font-medium text-[var(--text-muted)] transition hover:bg-white/10 hover:text-[var(--text)]"
                 >
                   {t('toolbar.clear')}
                 </button>
               </div>
             </div>
-            {importMessage ? (
-              <p className="mt-3 text-sm text-[var(--text-muted)]">{importMessage}</p>
-            ) : null}
+
+            {importMessage ? <p className="text-sm text-[var(--text-muted)]">{importMessage}</p> : null}
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       {activePath === '/' ? (
         <>
-          <DashboardSummaryCard
-            title={t('kpi.totalSpend')}
-            value={
-              dashboardQuery.data?.kpis.totalSpendUsd !== undefined
-                ? formatMoney(dashboardQuery.data.kpis.totalSpendUsd)
-                : dashboardQuery.isLoading
-                  ? t('status.loading')
-                  : t('status.unavailable')
-            }
-            change={formatKpiDelta(12.4)}
-            hint={t('kpi.comparedLastMonth')}
-          />
-          <DashboardSummaryCard
-            title={t('kpi.activeUsers')}
-            value={
-              dashboardQuery.data?.kpis.activeUserCount !== undefined
-                ? dashboardQuery.data.kpis.activeUserCount
-                : dashboardQuery.isLoading
-                  ? t('status.loading')
-                  : t('status.unavailable')
-            }
-            change={formatKpiDelta(8)}
-            hint={t('kpi.comparedLastMonth')}
-          />
-          <DashboardSummaryCard
-            title={t('kpi.totalRequests')}
-            value={
-              dashboardData?.kpis.totalRequestCount !== undefined
-                ? dashboardData.kpis.totalRequestCount.toLocaleString()
-                : dashboardQuery.isLoading
-                  ? t('status.loading')
-                  : t('status.unavailable')
-            }
-            change={formatKpiDelta(23)}
-            hint={t('kpi.comparedLastMonth')}
-          />
-          <DashboardSummaryCard
-            title={t('kpi.totalTokens')}
-            value={
-              dashboardData?.kpis.totalTokenCount !== undefined
-                ? dashboardData.kpis.totalTokenCount.toLocaleString()
-                : dashboardQuery.isLoading
-                  ? t('status.loading')
-                  : t('status.unavailable')
-            }
-            change={formatKpiDelta(17.2)}
-            hint={t('kpi.comparedLastMonth')}
-          />
-          <EChartCard
-            className="span-8"
-            title={t('chart.dailySpendTrend')}
-            subtitle={t('chart.dailySpendSubtitle')}
-            option={spendTrendOption}
-            loading={dashboardQuery.isLoading}
-            empty={!hasDashboardData || dashboardData.dailyTrends.spend.length === 0}
-            height={360}
-          />
+          <DashboardSummaryCard title={t('kpi.totalSpend')} value={dashboardQuery.data?.kpis.totalSpendUsd !== undefined ? formatMoney(dashboardQuery.data.kpis.totalSpendUsd) : dashboardQuery.isLoading ? t('status.loading') : t('status.unavailable')} change={formatKpiDelta(12.4)} hint={t('kpi.comparedLastMonth')} />
+          <DashboardSummaryCard title={t('kpi.activeUsers')} value={dashboardQuery.data?.kpis.activeUserCount !== undefined ? dashboardQuery.data.kpis.activeUserCount : dashboardQuery.isLoading ? t('status.loading') : t('status.unavailable')} change={formatKpiDelta(8)} hint={t('kpi.comparedLastMonth')} />
+          <DashboardSummaryCard title={t('kpi.totalRequests')} value={dashboardData?.kpis.totalRequestCount !== undefined ? dashboardData.kpis.totalRequestCount.toLocaleString() : dashboardQuery.isLoading ? t('status.loading') : t('status.unavailable')} change={formatKpiDelta(23)} hint={t('kpi.comparedLastMonth')} />
+          <DashboardSummaryCard title={t('kpi.totalTokens')} value={dashboardData?.kpis.totalTokenCount !== undefined ? dashboardData.kpis.totalTokenCount.toLocaleString() : dashboardQuery.isLoading ? t('status.loading') : t('status.unavailable')} change={formatKpiDelta(17.2)} hint={t('kpi.comparedLastMonth')} />
+
+          <EChartCard className="span-8" title={t('chart.dailySpendTrend')} subtitle={t('chart.dailySpendSubtitle')} option={spendTrendOption} loading={dashboardQuery.isLoading} empty={!hasDashboardData || dashboardData.dailyTrends.spend.length === 0} height={360} />
           <section className="glass-panel span-4 rounded-[26px] p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-dim)]">
-                  {t('signal.center')}
-                </p>
-                <p className="mt-3 text-4xl font-semibold tracking-[-0.03em] text-[var(--text)]">
-                  {signalsData?.unreadCount ?? 0}
-                </p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-dim)]">{t('signal.center')}</p>
+                <p className="mt-3 text-4xl font-semibold tracking-[-0.03em] text-[var(--text)]">{signalsData?.unreadCount ?? 0}</p>
               </div>
               <button
                 type="button"
@@ -649,38 +545,42 @@ export function App(): JSX.Element {
                 {t('misc.open')}
               </button>
             </div>
-            <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">
-              {t('signal.summary')}
-            </p>
+            <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">{t('signal.summary')}</p>
           </section>
-          <EChartCard
-            className="span-4"
-            title={t('chart.modelDistribution')}
-            subtitle={t('chart.modelDistributionSubtitle')}
-            option={modelShareOption}
-            loading={dashboardQuery.isLoading}
-            empty={!hasDashboardData}
-            height={320}
-          />
-          <EChartCard
-            className="span-4"
-            title={t('chart.topUsers')}
-            subtitle={t('chart.topUsersSubtitle')}
-            option={topUsersOption}
-            loading={dashboardQuery.isLoading}
-            empty={!hasDashboardData || dashboardData.topUserSpend.length === 0}
-            height={320}
-          />
-          <EChartCard
-            className="span-8"
-            title={t('chart.costBreakdown')}
-            subtitle={t('chart.costBreakdownSubtitle')}
-            option={costCompositionOption}
-            loading={dashboardQuery.isLoading}
-            empty={!hasDashboardData}
-            height={320}
-          />
+          <EChartCard className="span-4" title={t('chart.modelDistribution')} subtitle={t('chart.modelDistributionSubtitle')} option={modelShareOption} loading={dashboardQuery.isLoading} empty={!hasDashboardData} height={320} />
+          <EChartCard className="span-4" title={t('chart.topUsers')} subtitle={t('chart.topUsersSubtitle')} option={topUsersOption} loading={dashboardQuery.isLoading} empty={!hasDashboardData || dashboardData.topUserSpend.length === 0} height={320} />
+          <EChartCard className="span-8" title={t('chart.costBreakdown')} subtitle={t('chart.costBreakdownSubtitle')} option={costCompositionOption} loading={dashboardQuery.isLoading} empty={!hasDashboardData} height={320} />
         </>
+      ) : null}
+
+      {activePath === '/advanced-analytics' ? (
+        <AdvancedAnalyticsPage
+          billingMonth={billingMonth}
+          dashboardData={dashboardData}
+          previousDashboardData={previousDashboardData}
+          usersData={usersData}
+          previousUsersData={previousUsersData}
+          modelsData={modelsData}
+          previousModelsData={previousModelsData}
+          costData={costData}
+          previousCostData={previousCostData}
+          signalsData={signalsData}
+          userTrendData={userTrendData}
+          loading={
+            dashboardQuery.isLoading ||
+            previousDashboardQuery.isLoading ||
+            usersQuery.isLoading ||
+            previousUsersQuery.isLoading ||
+            modelsQuery.isLoading ||
+            previousModelsQuery.isLoading ||
+            costQuery.isLoading ||
+            previousCostQuery.isLoading ||
+            signalsQuery.isLoading ||
+            userTrendQuery.isLoading
+          }
+          selectedUserId={selectedUserId}
+          onSelectUser={setSelectedUserId}
+        />
       ) : null}
 
       {activePath === '/users' && usersData ? (
@@ -688,12 +588,8 @@ export function App(): JSX.Element {
           <DashboardSummaryCard className="span-4" title={t('kpi.activeUsers')} value={dashboardQuery.data?.kpis.activeUserCount ?? t('status.unavailable')} change={formatKpiDelta(8)} hint={t('kpi.comparedLastMonth')} />
           <DashboardSummaryCard className="span-4" title={t('kpi.budgetUsage')} value={dashboardData?.kpis.budgetUsageRatePct !== undefined ? `${dashboardData.kpis.budgetUsageRatePct.toFixed(1)}%` : t('status.unavailable')} change={formatKpiDelta(4.2)} hint={t('kpi.comparedLastMonth')} />
           <DashboardSummaryCard className="span-4" title={t('kpi.totalSpend')} value={dashboardQuery.data?.kpis.totalSpendUsd !== undefined ? formatMoney(dashboardQuery.data.kpis.totalSpendUsd) : t('status.unavailable')} change={formatKpiDelta(12.4)} hint={t('kpi.comparedLastMonth')} />
-          <div className="span-7">
-            <UserRankingTable rows={filteredUserRankings} selectedUserId={selectedUserId} onSelectUser={setSelectedUserId} searchTerm={userSearchTerm} onSearchTermChange={setUserSearchTerm} />
-          </div>
-          <div className="span-5">
-            <BudgetMonitorCard rows={safeUsersData.budgetMonitor} />
-          </div>
+          <div className="span-7"><UserRankingTable rows={filteredUserRankings} selectedUserId={selectedUserId} onSelectUser={setSelectedUserId} searchTerm={userSearchTerm} onSearchTermChange={setUserSearchTerm} /></div>
+          <div className="span-5"><BudgetMonitorCard rows={safeUsersData.budgetMonitor} /></div>
           <EChartCard className="span-7" title={t('chart.userTrend')} subtitle={selectedUserId ? `${selectedUserId}` : t('chart.userTrendEmpty')} option={userTrendOption} loading={userTrendQuery.isLoading} empty={!userTrendData || safeUserTrendData.spend.length === 0} />
           <EChartCard className="span-5" title={t('chart.userScatter')} subtitle={t('chart.userScatterSubtitle')} option={userScatterOption} loading={usersQuery.isLoading} empty={safeUsersData.activityScatter.length === 0} />
         </>
@@ -704,12 +600,8 @@ export function App(): JSX.Element {
           <DashboardSummaryCard className="span-4" title={t('kpi.selectedMonth')} value={billingMonth || t('status.unavailable')} hint={t('page.description')} />
           <DashboardSummaryCard className="span-4" title={t('kpi.totalSpend')} value={dashboardQuery.data?.kpis.totalSpendUsd !== undefined ? formatMoney(dashboardQuery.data.kpis.totalSpendUsd) : t('status.unavailable')} change={formatKpiDelta(12.4)} hint={t('kpi.comparedLastMonth')} />
           <DashboardSummaryCard className="span-4" title={t('kpi.totalRequests')} value={dashboardData?.kpis.totalRequestCount !== undefined ? dashboardData.kpis.totalRequestCount.toLocaleString() : t('status.unavailable')} change={formatKpiDelta(23)} hint={t('kpi.comparedLastMonth')} />
-          <div className="span-7">
-            <KeyRankingTable rows={filteredKeyRankings} selectedKeyId={selectedKeyId} onSelectKey={setSelectedKeyId} searchTerm={keySearchTerm} onSearchTermChange={setKeySearchTerm} />
-          </div>
-          <div className="span-5">
-            <KeyHealthCard longUnused={safeKeysData.keyHealth.longUnused.length} highFrequency={safeKeysData.keyHealth.highFrequency.length} abnormalGrowth={safeKeysData.keyHealth.abnormalGrowth.length} />
-          </div>
+          <div className="span-7"><KeyRankingTable rows={filteredKeyRankings} selectedKeyId={selectedKeyId} onSelectKey={setSelectedKeyId} searchTerm={keySearchTerm} onSearchTermChange={setKeySearchTerm} /></div>
+          <div className="span-5"><KeyHealthCard longUnused={safeKeysData.keyHealth.longUnused.length} highFrequency={safeKeysData.keyHealth.highFrequency.length} abnormalGrowth={safeKeysData.keyHealth.abnormalGrowth.length} /></div>
           <EChartCard className="span-12" title={t('chart.keyTrend')} subtitle={selectedKeyId ? `${selectedKeyId}` : t('chart.keyTrendEmpty')} option={keyTrendOption} loading={keysQuery.isLoading || keyTrendQuery.isLoading} empty={!keyTrendData || safeKeyTrendData.spend.length === 0} />
         </>
       ) : null}
@@ -735,12 +627,7 @@ export function App(): JSX.Element {
         </>
       ) : null}
 
-      <SignalDrawer
-        open={drawerOpen}
-        signals={signalsData?.signals ?? []}
-        onClose={() => setDrawerOpen(false)}
-        onNavigate={setActivePath}
-      />
+      <SignalDrawer open={drawerOpen} signals={signalsData?.signals ?? []} onClose={() => setDrawerOpen(false)} onNavigate={setActivePath} />
     </AppShell>
   );
 }

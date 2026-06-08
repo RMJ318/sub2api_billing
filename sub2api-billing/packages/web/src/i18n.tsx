@@ -106,6 +106,11 @@ const messagesByLocale: Record<Locale, Messages> = {
     'import.error': 'CSV 导入失败。',
     'misc.open': '打开',
     'misc.noData': '当前筛选条件下暂无数据。',
+    'cost.input': '输入',
+    'cost.output': '输出',
+    'cost.cacheCreate': '缓存写入',
+    'cost.cacheRead': '缓存读取',
+    'cost.image': '图片',
   },
   'en-US': {
     'lang.label': 'Language',
@@ -201,6 +206,11 @@ const messagesByLocale: Record<Locale, Messages> = {
     'import.error': 'CSV import failed.',
     'misc.open': 'Open',
     'misc.noData': 'No data available for the current selection.',
+    'cost.input': 'Input',
+    'cost.output': 'Output',
+    'cost.cacheCreate': 'Cache Create',
+    'cost.cacheRead': 'Cache Read',
+    'cost.image': 'Image',
   },
 };
 

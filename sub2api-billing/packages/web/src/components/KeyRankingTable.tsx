@@ -1,5 +1,7 @@
 import type { JSX } from 'react';
+import { useCollapsibleRows } from '../hooks/useCollapsibleRows.js';
 import { useI18n } from '../i18n.js';
+import { ExpandToggleButton } from './ExpandToggleButton.js';
 import { SearchBox } from './SearchBox.js';
 
 export interface KeyRankingRow {
@@ -27,6 +29,9 @@ export function KeyRankingTable({
   onSearchTermChange,
 }: KeyRankingTableProps): JSX.Element {
   const { t } = useI18n();
+  const { expanded, hasMoreRows, visibleRows, totalCount, visibleCount, toggleExpanded } =
+    useCollapsibleRows({ rows });
+
   return (
     <section className="glass-panel rounded-3xl p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -56,7 +61,7 @@ export function KeyRankingTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {visibleRows.map((row) => (
               <tr
                 key={row.apiKeyId}
                 className={
@@ -103,6 +108,16 @@ export function KeyRankingTable({
           </tbody>
         </table>
       </div>
+
+      {hasMoreRows ? (
+        <ExpandToggleButton
+          expanded={expanded}
+          totalCount={totalCount}
+          visibleCount={visibleCount}
+          itemLabel="行"
+          onToggle={toggleExpanded}
+        />
+      ) : null}
     </section>
   );
 }

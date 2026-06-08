@@ -1,6 +1,8 @@
 import type { JSX } from 'react';
+import { useCollapsibleRows } from '../hooks/useCollapsibleRows.js';
 import type { UserAggregatesResponse } from '../lib/api.js';
 import { useI18n } from '../i18n.js';
+import { ExpandToggleButton } from './ExpandToggleButton.js';
 import { SearchBox } from './SearchBox.js';
 
 export interface UserRankingTableProps {
@@ -19,6 +21,9 @@ export function UserRankingTable({
   onSearchTermChange,
 }: UserRankingTableProps): JSX.Element {
   const { t } = useI18n();
+  const { expanded, hasMoreRows, visibleRows, totalCount, visibleCount, toggleExpanded } =
+    useCollapsibleRows({ rows });
+
   return (
     <section className="glass-panel rounded-3xl p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -49,14 +54,10 @@ export function UserRankingTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {visibleRows.map((row) => (
               <tr
                 key={row.userId}
-                className={
-                  row.userId === selectedUserId
-                    ? 'bg-white/6'
-                    : 'transition hover:bg-white/4'
-                }
+                className={row.userId === selectedUserId ? 'bg-white/6' : 'transition hover:bg-white/4'}
               >
                 <td className="border-b border-[rgba(66,71,84,0.45)] py-4 pr-4 font-medium text-[var(--text)]">
                   <button
@@ -83,10 +84,7 @@ export function UserRankingTable({
             ))}
             {rows.length === 0 ? (
               <tr>
-                <td
-                  colSpan={5}
-                  className="py-10 text-center text-sm text-[var(--text-dim)]"
-                >
+                <td colSpan={5} className="py-10 text-center text-sm text-[var(--text-dim)]">
                   {t('table.emptyUsers')}
                 </td>
               </tr>
@@ -94,6 +92,16 @@ export function UserRankingTable({
           </tbody>
         </table>
       </div>
+
+      {hasMoreRows ? (
+        <ExpandToggleButton
+          expanded={expanded}
+          totalCount={totalCount}
+          visibleCount={visibleCount}
+          itemLabel="行"
+          onToggle={toggleExpanded}
+        />
+      ) : null}
     </section>
   );
 }

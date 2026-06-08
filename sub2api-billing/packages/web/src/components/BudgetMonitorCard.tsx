@@ -1,6 +1,8 @@
 import type { JSX } from 'react';
+import { useCollapsibleRows } from '../hooks/useCollapsibleRows.js';
 import type { UserAggregatesResponse } from '../lib/api.js';
 import { useI18n } from '../i18n.js';
+import { ExpandToggleButton } from './ExpandToggleButton.js';
 
 export interface BudgetMonitorCardProps {
   rows: UserAggregatesResponse['budgetMonitor'];
@@ -21,6 +23,9 @@ export function BudgetMonitorCard({
   rows,
 }: BudgetMonitorCardProps): JSX.Element {
   const { t } = useI18n();
+  const { expanded, hasMoreRows, visibleRows, totalCount, visibleCount, toggleExpanded } =
+    useCollapsibleRows({ rows });
+
   return (
     <section className="glass-panel rounded-3xl p-5">
       <h2 className="text-2xl font-semibold tracking-[-0.02em] text-[var(--text)]">
@@ -31,7 +36,7 @@ export function BudgetMonitorCard({
       </p>
 
       <div className="mt-5 space-y-4">
-        {rows.slice(0, 6).map((row) => (
+        {visibleRows.map((row) => (
           <div key={row.userId} className="panel-muted rounded-2xl p-4">
             <div className="mb-3 flex items-center justify-between gap-4 text-sm">
               <span className="font-medium text-[var(--text)]">
@@ -50,6 +55,16 @@ export function BudgetMonitorCard({
           </div>
         ))}
       </div>
+
+      {hasMoreRows ? (
+        <ExpandToggleButton
+          expanded={expanded}
+          totalCount={totalCount}
+          visibleCount={visibleCount}
+          itemLabel="条"
+          onToggle={toggleExpanded}
+        />
+      ) : null}
     </section>
   );
 }

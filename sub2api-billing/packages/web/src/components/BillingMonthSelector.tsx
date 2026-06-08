@@ -14,12 +14,12 @@ export function BillingMonthSelector({
   disabled = false,
 }: BillingMonthSelectorProps): JSX.Element {
   return (
-    <label className="flex min-w-[180px] items-center gap-3 rounded-2xl border border-[var(--border-soft)] bg-white/5 px-3 py-2.5 text-sm">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">
+    <label className="flex h-10 min-w-[156px] items-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-white/5 px-3 text-sm">
+      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">
         Month
       </span>
       <select
-        className="app-select border-0 bg-transparent px-0 py-0 text-sm font-medium text-[var(--text)] shadow-none focus:border-0 focus:shadow-none"
+        className="min-w-0 flex-1 border-0 bg-transparent px-0 py-0 text-sm font-medium text-[var(--text)] outline-none"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled || months.length === 0}

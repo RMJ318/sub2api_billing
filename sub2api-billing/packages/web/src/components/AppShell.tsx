@@ -11,6 +11,7 @@ interface NavLink {
 
 const NAV_LINKS: NavLink[] = [
   { label: 'Dashboard', path: '/', icon: <DashboardIcon /> },
+  { label: 'Advanced Analytics', path: '/advanced-analytics', icon: <AdvancedAnalyticsIcon /> },
   { label: 'Users', path: '/users', icon: <UsersIcon /> },
   { label: 'Models', path: '/models', icon: <ModelsIcon /> },
   { label: 'Keys', path: '/keys', icon: <KeysIcon /> },
@@ -23,6 +24,7 @@ export interface AppShellProps {
   onBellClick?: () => void;
   activePath?: string;
   onNavigate?: (path: string) => void;
+  headerActions?: ReactNode;
 }
 
 export function AppShell({
@@ -31,6 +33,7 @@ export function AppShell({
   onBellClick,
   activePath = '/',
   onNavigate,
+  headerActions,
 }: AppShellProps): JSX.Element {
   const { theme, toggleTheme } = useTheme();
   const { locale, setLocale, t } = useI18n();
@@ -69,17 +72,19 @@ export function AppShell({
                     }`}
                   >
                     <span className="opacity-90">{link.icon}</span>
-                    <span>
-                      {link.path === '/'
-                        ? t('nav.dashboard')
-                        : link.path === '/users'
-                          ? t('nav.users')
-                          : link.path === '/models'
-                            ? t('nav.models')
-                            : link.path === '/keys'
-                              ? t('nav.keys')
-                              : t('nav.cost')}
-                    </span>
+                      <span>
+                        {link.path === '/'
+                          ? t('nav.dashboard')
+                          : link.path === '/advanced-analytics'
+                            ? 'Advanced Analytics'
+                            : link.path === '/users'
+                              ? t('nav.users')
+                              : link.path === '/models'
+                                ? t('nav.models')
+                                : link.path === '/keys'
+                                  ? t('nav.keys')
+                                  : t('nav.cost')}
+                      </span>
                   </button>
                 </li>
               );
@@ -102,8 +107,8 @@ export function AppShell({
 
       <div className="min-h-screen min-w-0 md:pl-[240px]">
         <header className="sticky top-0 z-30 border-b border-[var(--border-soft)] bg-[rgba(13,19,34,0.86)] backdrop-blur-xl">
-          <div className="flex min-h-[72px] items-center justify-between gap-4 px-4 py-3 md:px-8">
-            <div className="flex min-w-0 items-center gap-3">
+          <div className="flex min-h-[72px] flex-wrap items-center gap-3 px-4 py-3 md:px-8">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
               <button
                 type="button"
                 aria-label="Toggle navigation"
@@ -122,7 +127,13 @@ export function AppShell({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-3">
+            {headerActions ? (
+              <div className="flex min-w-0 flex-[1.2] flex-wrap items-center justify-start gap-2 xl:justify-center">
+                {headerActions}
+              </div>
+            ) : null}
+
+            <div className="ml-auto flex items-center gap-2 md:gap-3">
               <label className="hidden items-center gap-2 rounded-2xl border border-[var(--border)] bg-white/5 px-3 py-2 text-sm font-medium text-[var(--text-muted)] lg:inline-flex">
                 <span className="text-xs text-[var(--text-dim)]">{t('lang.label')}</span>
                 <select
@@ -199,13 +210,15 @@ export function AppShell({
                       {link.icon}
                       {link.path === '/'
                         ? t('nav.dashboard')
-                        : link.path === '/users'
-                          ? t('nav.users')
-                          : link.path === '/models'
-                            ? t('nav.models')
-                            : link.path === '/keys'
-                              ? t('nav.keys')
-                              : t('nav.cost')}
+                        : link.path === '/advanced-analytics'
+                          ? 'Advanced Analytics'
+                          : link.path === '/users'
+                            ? t('nav.users')
+                            : link.path === '/models'
+                              ? t('nav.models')
+                              : link.path === '/keys'
+                                ? t('nav.keys')
+                                : t('nav.cost')}
                     </button>
                   </li>
                 );
@@ -351,6 +364,19 @@ function CostIcon() {
         strokeLinejoin="round"
         strokeWidth={2}
         d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+  );
+}
+
+function AdvancedAnalyticsIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 19h16M6 16l3-4 3 2 5-7 1 1M6 10v6M12 13v3M18 7v9"
       />
     </svg>
   );

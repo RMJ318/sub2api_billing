@@ -151,6 +151,386 @@ textarea {
   box-shadow: 0 12px 24px rgba(77, 142, 255, 0.2);
 }
 
+.analytics-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(173, 198, 255, 0.3), transparent);
+}
+
+.analytics-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(66, 71, 84, 0.9);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.analytics-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border-color: rgba(173, 198, 255, 0.32);
+}
+
+.analytics-chip-active {
+  background: linear-gradient(135deg, rgba(77, 142, 255, 0.28), rgba(0, 165, 114, 0.2));
+  color: var(--text);
+  border-color: rgba(173, 198, 255, 0.36);
+  box-shadow: inset 0 0 0 1px rgba(173, 198, 255, 0.08);
+}
+
+.analytics-link {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.analytics-link:hover {
+  color: var(--primary);
+}
+
+.analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.analytics-table thead th {
+  border-bottom: 1px solid rgba(66, 71, 84, 0.9);
+  color: var(--text-dim);
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0 0 0.9rem;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.analytics-table tbody td {
+  border-bottom: 1px solid rgba(66, 71, 84, 0.32);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 0.95rem 0;
+  vertical-align: middle;
+}
+
+.analytics-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.analytics-table tbody tr:hover td {
+  color: var(--text);
+}
+
+.analytics-progress {
+  position: relative;
+  height: 8px;
+  width: 108px;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.14);
+}
+
+.analytics-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary-strong), var(--secondary-strong));
+}
+
+.analytics-panel-accent {
+  position: relative;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 24px 80px rgba(2, 6, 23, 0.18);
+}
+
+.analytics-panel-accent::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(77, 142, 255, 0.05), rgba(78, 222, 163, 0.45), rgba(77, 142, 255, 0.05));
+  pointer-events: none;
+}
+
+.analytics-soft-card,
+.analytics-inline-metric,
+.analytics-metric-tile,
+.analytics-row-card,
+.analytics-risk-card {
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.analytics-soft-card:hover,
+.analytics-inline-metric:hover,
+.analytics-metric-tile:hover,
+.analytics-row-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(173, 198, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.analytics-risk-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.analytics-risk-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.95), rgba(251, 191, 36, 0.7));
+  opacity: 0.7;
+}
+
+.analytics-risk-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: 0 18px 44px rgba(127, 29, 29, 0.16);
+}
+
+.analytics-bullet-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.analytics-bullet-button {
+  width: 100%;
+  border: 1px solid rgba(66, 71, 84, 0.72);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.9rem 1rem;
+  text-align: left;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.analytics-bullet-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(173, 198, 255, 0.28);
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+}
+
+.analytics-bullet-button:focus-visible {
+  outline: none;
+  border-color: rgba(173, 198, 255, 0.42);
+  box-shadow:
+    0 0 0 3px rgba(77, 142, 255, 0.16),
+    0 16px 36px rgba(15, 23, 42, 0.18);
+}
+
+.analytics-bullet-cta {
+  flex-shrink: 0;
+  border-radius: 9999px;
+  border: 1px solid rgba(173, 198, 255, 0.18);
+  background: rgba(77, 142, 255, 0.1);
+  padding: 0.22rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+}
+
+.analytics-section-highlight {
+  position: relative;
+  border-radius: 28px;
+}
+
+.analytics-section-highlight::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: inherit;
+  border: 1px solid rgba(173, 198, 255, 0.3);
+  box-shadow:
+    0 0 0 1px rgba(173, 198, 255, 0.08),
+    0 0 32px rgba(77, 142, 255, 0.18);
+  pointer-events: none;
+  animation: analyticsSectionPulse 1.8s ease;
+}
+
+.analytics-row-highlight td,
+.analytics-row-highlight > * {
+  background: rgba(77, 142, 255, 0.08);
+}
+
+.analytics-row-highlight td:first-child {
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+
+.analytics-row-highlight td:last-child {
+  border-top-right-radius: 14px;
+  border-bottom-right-radius: 14px;
+}
+
+.analytics-floating-toc {
+  position: fixed;
+  top: 6rem;
+  right: 0.5rem;
+  z-index: 30;
+  width: 280px;
+  pointer-events: none;
+}
+
+.analytics-toc {
+  min-width: 0;
+  pointer-events: auto;
+}
+
+.analytics-toc-card {
+  overflow: hidden;
+  max-height: calc(100vh - 7.5rem);
+}
+
+.analytics-toc-card > .mt-4 {
+  max-height: calc(100vh - 12.5rem);
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.analytics-toc-item {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto 1fr;
+  gap: 0.875rem;
+  align-items: start;
+  border: 1px solid rgba(66, 71, 84, 0.72);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 0.85rem 0.9rem;
+  text-align: left;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.analytics-toc-item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(173, 198, 255, 0.24);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+}
+
+.analytics-toc-item-active {
+  border-color: rgba(173, 198, 255, 0.34);
+  background: linear-gradient(135deg, rgba(77, 142, 255, 0.12), rgba(0, 165, 114, 0.08));
+  box-shadow:
+    inset 0 0 0 1px rgba(173, 198, 255, 0.08),
+    0 12px 28px rgba(15, 23, 42, 0.14);
+}
+
+.analytics-toc-index {
+  display: inline-flex;
+  min-width: 2.2rem;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(173, 198, 255, 0.14);
+  background: rgba(77, 142, 255, 0.08);
+  padding: 0.22rem 0.48rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+}
+
+.analytics-mobile-toc {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 20;
+  display: flex;
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding: 0.15rem 0 0.35rem;
+  scrollbar-width: thin;
+}
+
+.analytics-mobile-toc::after {
+  content: '';
+  min-width: 0.25rem;
+  flex-shrink: 0;
+}
+
+@keyframes analyticsSectionPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  18% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.005);
+  }
+}
+
+.analytics-bullet-index {
+  display: inline-flex;
+  min-width: 2rem;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(173, 198, 255, 0.16);
+  background: rgba(77, 142, 255, 0.08);
+  padding: 0.18rem 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+}
+
+.analytics-heatmap-cell {
+  transition:
+    transform 0.14s ease,
+    border-color 0.14s ease,
+    box-shadow 0.14s ease,
+    opacity 0.14s ease;
+}
+
+.analytics-heatmap-cell:hover {
+  transform: translateY(-1px) scale(1.02);
+  border-color: rgba(173, 198, 255, 0.4);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.26);
+  opacity: 1;
+}
+
+@media (min-width: 1440px) {
+  .analytics-floating-toc {
+    right: 0.75rem;
+  }
+}
+
+@media (max-width: 1279px) {
+  .analytics-floating-toc {
+    display: none;
+  }
+}
+
 @media (min-width: 768px) {
   .app-card-grid {
     grid-template-columns: repeat(12, minmax(0, 1fr));
