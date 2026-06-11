@@ -35,6 +35,7 @@ export function App(): JSX.Element {
   const [activePath, setActivePath] = useState('/');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [advancedAnalyticsGlobalView, setAdvancedAnalyticsGlobalView] = useState(false);
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [keySearchTerm, setKeySearchTerm] = useState('');
@@ -260,16 +261,27 @@ export function App(): JSX.Element {
   }, [billingMonth, months]);
 
   useEffect(() => {
-    if (filteredUserRankings.length && !selectedUserId) {
+    if (filteredUserRankings.length && !selectedUserId && (activePath !== '/advanced-analytics' || !advancedAnalyticsGlobalView)) {
       setSelectedUserId(filteredUserRankings[0]!.userId);
     }
-  }, [filteredUserRankings, selectedUserId]);
+  }, [activePath, advancedAnalyticsGlobalView, filteredUserRankings, selectedUserId]);
 
   useEffect(() => {
     if (filteredKeyRankings.length && !selectedKeyId) {
       setSelectedKeyId(filteredKeyRankings[0]!.apiKeyId);
     }
   }, [filteredKeyRankings, selectedKeyId]);
+
+  const handleAdvancedAnalyticsSelectUser = (userId: string | null) => {
+    if (userId) {
+      setAdvancedAnalyticsGlobalView(false);
+      setSelectedUserId(userId);
+      return;
+    }
+
+    setAdvancedAnalyticsGlobalView(true);
+    setSelectedUserId(null);
+  };
 
   const spendTrendOption = useMemo<EChartsOption | undefined>(() => {
     if (!dashboardData) return undefined;
@@ -579,7 +591,7 @@ export function App(): JSX.Element {
             userTrendQuery.isLoading
           }
           selectedUserId={selectedUserId}
-          onSelectUser={setSelectedUserId}
+          onSelectUser={handleAdvancedAnalyticsSelectUser}
         />
       ) : null}
 

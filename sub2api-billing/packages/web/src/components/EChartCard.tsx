@@ -1,6 +1,7 @@
 import { useEffect, useRef, type JSX, type ReactNode } from 'react';
 import * as echarts from 'echarts';
 import type { EChartsOption } from 'echarts';
+import type { ECElementEvent } from 'echarts';
 
 export interface EChartCardProps {
   title: string;
@@ -11,6 +12,7 @@ export interface EChartCardProps {
   subtitle?: ReactNode;
   height?: number;
   className?: string;
+  onChartClick?: (event: ECElementEvent) => void;
 }
 
 export function EChartCard({
@@ -22,6 +24,7 @@ export function EChartCard({
   subtitle,
   height = 320,
   className,
+  onChartClick,
 }: EChartCardProps): JSX.Element {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<echarts.ECharts | null>(null);
@@ -73,6 +76,19 @@ export function EChartCard({
       chartRef.current.hideLoading();
     }
   }, [loading, empty]);
+
+  useEffect(() => {
+    if (!chartRef.current || empty || !onChartClick) {
+      return;
+    }
+
+    const chart = chartRef.current;
+    chart.on('click', onChartClick);
+
+    return () => {
+      chart.off('click', onChartClick);
+    };
+  }, [empty, onChartClick]);
 
   return (
     <section className={`glass-panel rounded-[26px] p-5 ${className ?? 'span-6'}`}>

@@ -8,6 +8,7 @@ export interface DashboardSummaryCardProps {
   change?: ReactNode;
   tone?: 'primary' | 'success' | 'warning' | 'danger';
   onClick?: () => void;
+  actionLabel?: string;
 }
 
 const ACCENT_BY_TITLE: Record<string, string> = {
@@ -43,6 +44,7 @@ export function DashboardSummaryCard({
   change,
   tone,
   onClick,
+  actionLabel,
 }: DashboardSummaryCardProps): JSX.Element {
   const accentClass = tone ? TONE_CLASS[tone] : (ACCENT_BY_TITLE[title] ?? 'text-[var(--text)]');
   const panelClass = tone ? TONE_PANEL_CLASS[tone] : '';
@@ -67,6 +69,12 @@ export function DashboardSummaryCard({
         </div>
       </div>
       {hint ? <p className="mt-1.5 text-[13px] leading-5 text-[var(--text-muted)]">{hint}</p> : null}
+      {onClick && actionLabel ? (
+        <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--primary)]">
+          <span>{actionLabel}</span>
+          <span aria-hidden="true">↗</span>
+        </div>
+      ) : null}
     </>
   );
 
