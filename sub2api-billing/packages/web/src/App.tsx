@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type JSX } from 'react';
 import type { EChartsOption } from 'echarts';
 import { useQueryClient } from '@tanstack/react-query';
+import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './components/AppShell.js';
 import { BillingMonthSelector } from './components/BillingMonthSelector.js';
 import { BudgetMonitorCard } from './components/BudgetMonitorCard.js';
@@ -15,6 +16,7 @@ import { UserRankingTable } from './components/UserRankingTable.js';
 import { useI18n } from './i18n.js';
 import { importCsvFile } from './lib/api.js';
 import { AdvancedAnalyticsPage } from './pages/AdvancedAnalyticsPage.js';
+import { UserProfilePage } from './pages/UserProfilePage.js';
 import {
   useCost,
   useDashboard,
@@ -30,9 +32,10 @@ import {
 
 export function App(): JSX.Element {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useI18n();
 
-  const [activePath, setActivePath] = useState('/');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [advancedAnalyticsGlobalView, setAdvancedAnalyticsGlobalView] = useState(false);
@@ -43,6 +46,11 @@ export function App(): JSX.Element {
   const [dateEnd, setDateEnd] = useState('');
   const [importing, setImporting] = useState(false);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+
+  const userProfileMatch = matchPath('/advanced-analytics/users/:userId', location.pathname);
+  const selectedRouteUserId = userProfileMatch?.params.userId ?? null;
+  const isUserProfileRoute = Boolean(userProfileMatch);
+  const activePath = isUserProfileRoute ? '/advanced-analytics' : location.pathname;
 
   const monthsQuery = useMonths();
   const months = useMemo(() => monthsQuery.data?.months ?? ['2026-05', '2026-04'], [monthsQuery.data]);
@@ -59,6 +67,7 @@ export function App(): JSX.Element {
   const usersQuery = useUsers(billingMonth || null);
   const previousUsersQuery = useUsers(previousBillingMonth);
   const userTrendQuery = useUserTrend(billingMonth || null, selectedUserId);
+  const previousUserTrendQuery = useUserTrend(previousBillingMonth, selectedUserId);
   const keysQuery = useKeys(billingMonth || null);
   const keyTrendQuery = useKeyTrend(billingMonth || null, selectedKeyId);
   const modelsQuery = useModels(billingMonth || null);
@@ -72,6 +81,7 @@ export function App(): JSX.Element {
   const usersData = usersQuery.data;
   const previousUsersData = previousUsersQuery.data;
   const userTrendData = userTrendQuery.data;
+  const previousUserTrendData = previousUserTrendQuery.data;
   const keysData = keysQuery.data;
   const keyTrendData = keyTrendQuery.data;
   const modelsData = modelsQuery.data;
@@ -189,12 +199,17 @@ export function App(): JSX.Element {
       title: 'Advanced Analytics',
       description: '深度分析用户 API 使用行为、成本结构、增长趋势与异常风险。',
     },
+    '/advanced-analytics/users/:userId': {
+      eyebrow: 'User Profile',
+      title: 'User Profile',
+      description: '聚焦单个用户的成本、请求、模型偏好和风险信号。',
+    },
     '/users': { eyebrow: t('nav.users'), title: t('nav.users'), description: t('page.description') },
     '/keys': { eyebrow: t('nav.keys'), title: t('nav.keys'), description: t('page.description') },
     '/models': { eyebrow: t('nav.models'), title: t('nav.models'), description: t('page.description') },
     '/cost': { eyebrow: t('nav.cost'), title: t('nav.cost'), description: t('page.description') },
   };
-  const pageMeta = pageMetaByPath[activePath] ?? pageMetaByPath['/']!;
+  const pageMeta = pageMetaByPath[isUserProfileRoute ? '/advanced-analytics/users/:userId' : activePath] ?? pageMetaByPath['/']!;
 
   const formatMoney = (value: string | number | undefined): string => {
     if (value === undefined) return t('status.unavailable');
@@ -261,16 +276,31 @@ export function App(): JSX.Element {
   }, [billingMonth, months]);
 
   useEffect(() => {
+    if (selectedRouteUserId) {
+      setSelectedUserId(selectedRouteUserId);
+      return;
+    }
+
     if (filteredUserRankings.length && !selectedUserId && (activePath !== '/advanced-analytics' || !advancedAnalyticsGlobalView)) {
       setSelectedUserId(filteredUserRankings[0]!.userId);
     }
-  }, [activePath, advancedAnalyticsGlobalView, filteredUserRankings, selectedUserId]);
+  }, [activePath, advancedAnalyticsGlobalView, filteredUserRankings, selectedRouteUserId, selectedUserId]);
 
   useEffect(() => {
     if (filteredKeyRankings.length && !selectedKeyId) {
       setSelectedKeyId(filteredKeyRankings[0]!.apiKeyId);
     }
   }, [filteredKeyRankings, selectedKeyId]);
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+  };
+
+  const openUserProfilePage = (userId: string) => {
+    setAdvancedAnalyticsGlobalView(false);
+    setSelectedUserId(userId);
+    navigate(`/advanced-analytics/users/${encodeURIComponent(userId)}`);
+  };
 
   const handleAdvancedAnalyticsSelectUser = (userId: string | null) => {
     if (userId) {
@@ -472,7 +502,7 @@ export function App(): JSX.Element {
   return (
     <AppShell
       activePath={activePath}
-      onNavigate={setActivePath}
+      onNavigate={handleNavigate}
       unreadCount={signalsData?.unreadCount ?? 0}
       onBellClick={() => setDrawerOpen((prev) => !prev)}
       headerActions={
@@ -493,7 +523,7 @@ export function App(): JSX.Element {
         </>
       }
     >
-      {activePath !== '/advanced-analytics' ? (
+      {activePath !== '/advanced-analytics' || isUserProfileRoute ? (
         <section className="span-12">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
@@ -565,7 +595,7 @@ export function App(): JSX.Element {
         </>
       ) : null}
 
-      {activePath === '/advanced-analytics' ? (
+      {activePath === '/advanced-analytics' && !isUserProfileRoute ? (
         <AdvancedAnalyticsPage
           billingMonth={billingMonth}
           dashboardData={dashboardData}
@@ -592,6 +622,40 @@ export function App(): JSX.Element {
           }
           selectedUserId={selectedUserId}
           onSelectUser={handleAdvancedAnalyticsSelectUser}
+          onOpenUserProfile={openUserProfilePage}
+        />
+      ) : null}
+
+      {isUserProfileRoute ? (
+        <UserProfilePage
+          billingMonth={billingMonth}
+          previousBillingMonth={previousBillingMonth}
+          dashboardData={dashboardData}
+          previousDashboardData={previousDashboardData}
+          usersData={usersData}
+          previousUsersData={previousUsersData}
+          modelsData={modelsData}
+          previousModelsData={previousModelsData}
+          costData={costData}
+          previousCostData={previousCostData}
+          signalsData={signalsData}
+          userTrendData={userTrendData}
+          previousUserTrendData={previousUserTrendData}
+          loading={
+            dashboardQuery.isLoading ||
+            previousDashboardQuery.isLoading ||
+            usersQuery.isLoading ||
+            previousUsersQuery.isLoading ||
+            modelsQuery.isLoading ||
+            previousModelsQuery.isLoading ||
+            costQuery.isLoading ||
+            previousCostQuery.isLoading ||
+            signalsQuery.isLoading ||
+            userTrendQuery.isLoading ||
+            previousUserTrendQuery.isLoading
+          }
+          selectedUserId={selectedRouteUserId}
+          onBackToAnalytics={() => navigate('/advanced-analytics')}
         />
       ) : null}
 
@@ -639,7 +703,7 @@ export function App(): JSX.Element {
         </>
       ) : null}
 
-      <SignalDrawer open={drawerOpen} signals={signalsData?.signals ?? []} onClose={() => setDrawerOpen(false)} onNavigate={setActivePath} />
+      <SignalDrawer open={drawerOpen} signals={signalsData?.signals ?? []} onClose={() => setDrawerOpen(false)} onNavigate={handleNavigate} />
     </AppShell>
   );
 }

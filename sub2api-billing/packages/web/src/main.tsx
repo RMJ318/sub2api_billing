@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import { App } from './App.js';
 import { I18nProvider } from './i18n.js';
@@ -21,9 +22,11 @@ const queryClient = new QueryClient();
 createRoot(container).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <I18nProvider>
-        <App />
-      </I18nProvider>
+      <BrowserRouter>
+        <I18nProvider>
+          <App />
+        </I18nProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,
 );

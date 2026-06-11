@@ -46,6 +46,7 @@ export interface AdvancedAnalyticsPageProps {
   loading?: boolean;
   selectedUserId?: string | null;
   onSelectUser?: (userId: string | null) => void;
+  onOpenUserProfile?: (userId: string) => void;
 }
 
 const rankingTabs: Array<{ key: RankingTabKey; label: string }> = [
@@ -329,6 +330,7 @@ export function AdvancedAnalyticsPage({
   loading = false,
   selectedUserId,
   onSelectUser,
+  onOpenUserProfile,
 }: AdvancedAnalyticsPageProps): JSX.Element {
   const [rankingTab, setRankingTab] = useState<RankingTabKey>('cost');
   const [growthLimit, setGrowthLimit] = useState<GrowthLimit>(10);
@@ -769,8 +771,14 @@ export function AdvancedAnalyticsPage({
 
   const focusUserProfile = (userId: string) => {
     setHighlightedUserId(userId);
-    setActiveSectionId('analytics-user-profile');
     onSelectUser?.(userId);
+
+    if (onOpenUserProfile) {
+      onOpenUserProfile(userId);
+      return;
+    }
+
+    setActiveSectionId('analytics-user-profile');
     scrollToSection('analytics-user-profile');
   };
 
@@ -947,7 +955,12 @@ export function AdvancedAnalyticsPage({
       return;
     }
 
-    handleSectionJump('analytics-user-profile');
+    if (selectedUserProfile) {
+      focusUserProfile(selectedUserProfile.userId);
+      return;
+    }
+
+    handleSectionJump('analytics-ranking');
   };
 
   const selectedUserProfile = data.selectedUserProfile;
@@ -1155,25 +1168,45 @@ export function AdvancedAnalyticsPage({
           ) : null}
           <section id="analytics-overview" className={sectionClassName('analytics-overview', '')}>
         <div className="glass-panel rounded-[28px] p-6 md:p-7">
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-            <div className="max-w-4xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-dim)]">
-                Advanced Analytics
-              </p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] md:text-[2.6rem]">
-                深度分析用户 API 使用行为、成本结构、增长趋势与异常风险。
-              </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--text-muted)]">
-                面向运营、管理员和管理层的高级洞察视图，帮助你在 30 秒内看清钱花在哪、谁增长最快、谁存在风险，以及哪些模型最值得优化。
-              </p>
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)] xl:items-start">
+            <div className="min-w-0">
+              <div className="max-w-4xl">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-dim)]">
+                  Advanced Analytics
+                </p>
+                <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--text)] md:text-[2.6rem]">
+                  深度分析用户 API 使用行为、成本结构、增长趋势与异常风险。
+                </h1>
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--text-muted)]">
+                  面向运营、管理员和管理层的高级洞察视图，帮助你在 30 秒内看清钱花在哪、谁增长最快、谁存在风险，以及哪些模型最值得优化。
+                </p>
+              </div>
+
+              <div id="analytics-kpis" className={sectionClassName('analytics-kpis', 'mt-6')}>
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {data.kpis.map((kpi) => (
+                    <DashboardSummaryCard
+                      key={kpi.title}
+                      className="min-h-[168px]"
+                      title={kpi.title}
+                      value={kpi.value}
+                      change={kpi.change}
+                      hint={kpi.hint}
+                      tone={kpi.tone}
+                      onClick={kpiSectionTargets[kpi.title] ? () => handleKpiJump(kpi.title) : undefined}
+                      actionLabel={kpiSectionTargets[kpi.title] ? '查看明细' : undefined}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
 
-              <div className="grid min-w-0 flex-1 gap-3 md:grid-cols-2">
-                <InsightMiniCard title="成本洞察" body={data.aiInsight.costInsight} onClick={() => jumpFromInsightMiniCard('成本洞察')} />
-                <InsightMiniCard title="用户洞察" body={data.aiInsight.userInsight} onClick={() => jumpFromInsightMiniCard('用户洞察')} />
-                <InsightMiniCard title="风险洞察" body={data.aiInsight.riskInsight} onClick={() => jumpFromInsightMiniCard('风险洞察')} />
-                <InsightMiniCard title="优化建议" body={data.aiInsight.optimizationSuggestion} onClick={() => jumpFromInsightMiniCard('优化建议')} />
-              </div>
+            <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-2">
+              <InsightMiniCard title="成本洞察" body={data.aiInsight.costInsight} onClick={() => jumpFromInsightMiniCard('成本洞察')} />
+              <InsightMiniCard title="用户洞察" body={data.aiInsight.userInsight} onClick={() => jumpFromInsightMiniCard('用户洞察')} />
+              <InsightMiniCard title="风险洞察" body={data.aiInsight.riskInsight} onClick={() => jumpFromInsightMiniCard('风险洞察')} />
+              <InsightMiniCard title="优化建议" body={data.aiInsight.optimizationSuggestion} onClick={() => jumpFromInsightMiniCard('优化建议')} />
+            </div>
           </div>
 
           <div className="analytics-divider mt-6" />
@@ -1249,24 +1282,6 @@ export function AdvancedAnalyticsPage({
           </div>
         </div>
       </section>
-
-      <div id="analytics-kpis" className={sectionClassName('analytics-kpis', '')}>
-        <div className="grid gap-4 md:grid-cols-5">
-          {data.kpis.map((kpi) => (
-            <DashboardSummaryCard
-              key={kpi.title}
-              className="min-h-[168px]"
-              title={kpi.title}
-              value={kpi.value}
-              change={kpi.change}
-              hint={kpi.hint}
-              tone={kpi.tone}
-              onClick={kpiSectionTargets[kpi.title] ? () => handleKpiJump(kpi.title) : undefined}
-              actionLabel={kpiSectionTargets[kpi.title] ? '查看明细' : undefined}
-            />
-          ))}
-        </div>
-      </div>
 
       <div className="grid gap-4 xl:grid-cols-12">
       <section
@@ -1841,9 +1856,9 @@ export function AdvancedAnalyticsPage({
       >
         <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <h2 className="text-xl font-semibold tracking-[-0.02em] text-[var(--text)]">用户画像分析</h2>
+            <h2 className="text-xl font-semibold tracking-[-0.02em] text-[var(--text)]">独立用户画像页</h2>
             <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-              点击排行榜中的任意用户查看基础指标、趋势变化、模型偏好与风险信号。
+              用户画像已从平台分析页拆出。这里保留当前选中用户的摘要和进入入口，避免平台视图与用户深钻混在一起。
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -1851,21 +1866,14 @@ export function AdvancedAnalyticsPage({
               <>
                 <button
                   type="button"
-                  className="analytics-chip"
-                  onClick={() => {
-                    setRankingTab('cost');
-                    handleSectionJump('analytics-ranking');
-                  }}
+                  className="analytics-chip analytics-chip-active"
+                  onClick={() => focusUserProfile(data.selectedUserProfile!.userId)}
                 >
-                  返回用户排行榜
+                  打开用户画像页
                 </button>
-                  <button
-                    type="button"
-                    className="analytics-chip"
-                    onClick={clearLinkedFilters}
-                  >
-                    清除联动筛选
-                  </button>
+                <button type="button" className="analytics-chip" onClick={clearLinkedFilters}>
+                  清除联动筛选
+                </button>
                 <button
                   type="button"
                   className={`analytics-chip ${isSelectedUserWatched ? 'analytics-chip-active' : ''}`}
@@ -1876,210 +1884,75 @@ export function AdvancedAnalyticsPage({
                 >
                   {isSelectedUserWatched ? '移出观察名单' : '加入观察名单'}
                 </button>
-                <button
-                  type="button"
-                  className="analytics-chip"
-                  onClick={clearSelectedUserContext}
-                >
+                <button type="button" className="analytics-chip" onClick={clearSelectedUserContext}>
                   清除选择
                 </button>
               </>
             ) : null}
-            {activeModelFocus ? (
-              <div className="rounded-full border border-[rgba(77,142,255,0.18)] bg-[rgba(77,142,255,0.1)] px-3 py-1 text-xs font-semibold text-[var(--primary)]">
-                Model · {activeModelFocus}
-              </div>
-            ) : null}
-            {isSelectedUserWatched ? (
-              <div className="rounded-full border border-amber-300/18 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-100">
-                Watchlist
-              </div>
-            ) : null}
-            <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-[var(--text-dim)]">
-              {data.selectedUserProfile ? `Selected · ${data.selectedUserProfile.user}` : 'No User Selected'}
-            </div>
           </div>
         </div>
 
         {selectedUserProfile ? (
-          <div className="mt-5 grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
-            <div className="space-y-4">
-              <div className="panel-muted analytics-panel-accent rounded-[22px] p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">
-                      Selected User
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => focusUserProfile(selectedUserProfile.userId)}
-                      className="mt-2 inline-flex items-center gap-2 text-left text-2xl font-semibold tracking-[-0.03em] text-[var(--text)] transition hover:text-[var(--primary)]"
-                    >
-                      <span>{selectedUserProfile.user}</span>
-                      <span className="text-sm font-semibold text-[var(--primary)]">回到画像 ↗</span>
-                    </button>
-                  </div>
-                  <span className="rounded-full border border-[rgba(173,198,255,0.18)] bg-[rgba(77,142,255,0.1)] px-3 py-1 text-xs font-semibold text-[var(--primary)]">
-                    Live Profile
-                  </span>
+          <div className="mt-5 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+            <div className="panel-muted analytics-panel-accent rounded-[22px] p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">
+                    Current User
+                  </p>
+                  <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--text)]">
+                    {selectedUserProfile.user}
+                  </h3>
                 </div>
-
-                <div className="mt-5 grid gap-4 md:grid-cols-2">
-                  <MetricTile label="总成本" value={formatMoney(selectedUserProfile.totalCost)} />
-                  <MetricTile label="总请求数" value={formatNumber(selectedUserProfile.totalRequests)} />
-                  <MetricTile label="总 Token" value={formatNumber(selectedUserProfile.totalTokens)} />
-                  <MetricTile label="活跃天数" value={`${selectedUserProfile.activeDays}`} />
-                </div>
-
-                {activeModelFocus ? (
-                  <div className="analytics-context-strip mt-4">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="analytics-context-badge">Model Focus</span>
-                        <span className="text-sm font-semibold text-[var(--text)]">{activeModelFocus}</span>
-                      </div>
-                      <p className="mt-2 text-xs leading-6 text-[var(--text-muted)]">
-                        当前画像正在围绕 <span className="font-semibold text-[var(--text)]">{activeModelFocus}</span> 做对照。
-                        {selectedModelPreferenceValue !== null ? (
-                          <>
-                            {' '}该用户对该模型的估算值约为{' '}
-                            <span className="font-semibold text-[var(--primary)]">{formatNumber(selectedModelPreferenceValue)}</span>。
-                          </>
-                        ) : (
-                          <> 当前画像未明显命中该模型偏好，可切换其他用户继续比较。</>
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button type="button" className="analytics-chip" onClick={() => handleSectionJump('analytics-model-preference')}>
-                        返回模型分析
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
+                <span className="rounded-full border border-[rgba(173,198,255,0.18)] bg-[rgba(77,142,255,0.1)] px-3 py-1 text-xs font-semibold text-[var(--primary)]">
+                  Profile Ready
+                </span>
               </div>
 
-              <div className="panel-muted rounded-[22px] p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">风险信号</p>
-                  <span className="rounded-full border border-amber-300/15 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-100">
-                    Watchlist
-                  </span>
-                </div>
-                <ul className="mt-4 space-y-3">
-                  {selectedUserProfile.riskSignals.map((signal, index) => {
-                    const anomalyTypeFromSignal = data.anomalies.find(
-                      (item) =>
-                        item.userId === selectedUserProfile.userId &&
-                        (signal.includes(item.type) ||
-                          signal.includes('成本增长') ||
-                          signal.includes('请求量增长') ||
-                          signal.includes('深夜')),
-                    )?.type;
-                    const detail = buildRiskSignalDetail(signal, index, {
-                      userId: selectedUserProfile.userId,
-                      userLabel: selectedUserProfile.user,
-                    });
-                    return (
-                      <li
-                        key={detail.id}
-                        className={`analytics-clickable-card rounded-2xl border px-4 py-3 ${
-                          activeModelFocus && signal.includes(activeModelFocus)
-                            ? 'border-[rgba(77,142,255,0.24)] bg-[rgba(77,142,255,0.12)]'
-                            : 'border-amber-300/15 bg-amber-500/10'
-                        }`}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => setActiveRiskSignal(detail)}
-                          className="w-full text-left text-sm text-amber-100 transition hover:-translate-y-0.5"
-                        >
-                          <span className="flex items-start justify-between gap-3">
-                            <span>{signal}</span>
-                            <span className="analytics-subtle-cta shrink-0">查看详情</span>
-                          </span>
-                        </button>
-                        <div className="mt-3 flex flex-wrap justify-end gap-2">
-                          {anomalyTypeFromSignal ? (
-                            <button
-                              type="button"
-                              onClick={() => openSimilarAnomalies(anomalyTypeFromSignal)}
-                              className="text-xs font-semibold text-[var(--primary)] transition hover:text-white"
-                            >
-                              查看同类异常
-                            </button>
-                          ) : null}
-                          <button
-                            type="button"
-                            onClick={() => handleSectionJump('analytics-anomalies')}
-                            className="text-xs font-semibold text-amber-200/90 transition hover:text-amber-100"
-                          >
-                            去异常中心查看同类问题 →
-                          </button>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <MetricTile label="总成本" value={formatMoney(selectedUserProfile.totalCost)} />
+                <MetricTile label="总请求数" value={formatNumber(selectedUserProfile.totalRequests)} />
+                <MetricTile label="总 Token" value={formatNumber(selectedUserProfile.totalTokens)} />
+                <MetricTile label="活跃天数" value={`${selectedUserProfile.activeDays}`} />
               </div>
 
-              <div className="panel-muted rounded-[22px] p-5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">活跃时间分布</p>
-                <p className="mt-2 text-xs leading-6 text-[var(--text-muted)]">
-                  点击某个时段后，我会保留这个时间焦点，方便你回到异常中心继续核查。
-                </p>
-                <HeatmapGrid
-                  cells={selectedUserProfile.activityHeatmap}
-                  compact
-                  onCellClick={(cell) => focusHeatmapCell(cell, 'selected-user')}
-                />
-              </div>
+              <p className="mt-4 text-sm leading-6 text-[var(--text-muted)]">
+                推荐在独立画像页继续查看该用户的趋势、模型偏好、风险信号与运营建议。
+              </p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <EChartCard
-                title="成本趋势图"
+                title="成本趋势预览"
                 subtitle="最近 30 天"
                 option={userSpendTrendOption}
                 loading={loading}
                 empty={!userSpendTrendOption}
-                height={280}
+                height={260}
               />
               <EChartCard
-                title="请求趋势图"
+                title="请求趋势预览"
                 subtitle="最近 30 天"
                 option={userRequestTrendOption}
                 loading={loading}
                 empty={!userRequestTrendOption}
-                height={280}
+                height={260}
               />
-              <EChartCard
-                className="md:col-span-2"
-                title="模型偏好"
-                subtitle="Donut Chart · 点击扇区继续聚焦模型上下文"
-                option={{
-                  tooltip: { trigger: 'item' },
-                  legend: { bottom: 0, textStyle: { color: '#8c909f' } },
-                  series: [
-                    {
-                      type: 'pie',
-                      radius: ['48%', '70%'],
-                      itemStyle: { borderColor: '#111827', borderWidth: 2 },
-                      data: selectedUserProfile.modelPreference.map((item, index) => ({
-                        name: item.name,
-                        value: item.value,
-                        itemStyle: {
-                          color: ['#4d8eff', '#00c2ff', '#8b5cf6', '#00a572', '#64748b'][index] ?? '#64748b',
-                        },
-                      })),
-                    },
-                  ],
-                }}
-                loading={loading}
-                empty={selectedUserProfile.modelPreference.length === 0}
-                height={320}
-                onChartClick={handleModelChartClick}
-              />
+              <div className="panel-muted rounded-[22px] p-5 md:col-span-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">
+                  Next Step
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+                  在独立页面中继续查看完整用户工作台，包括 KPI、趋势、模型结构、风险信号和运营建议。
+                </p>
+                <button
+                  type="button"
+                  className="analytics-chip analytics-chip-active mt-4"
+                  onClick={() => focusUserProfile(selectedUserProfile.userId)}
+                >
+                  进入独立画像页
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -2092,16 +1965,7 @@ export function AdvancedAnalyticsPage({
                 当前处于全局视角，还没有锁定具体用户
               </h3>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-muted)]">
-                {activeModelFocus ? (
-                  <>
-                    你当前正从 <span className="font-semibold text-[var(--text)]">{activeModelFocus}</span> 模型视角往下钻取，
-                    建议先选一个代表用户，我会保留这个模型焦点方便你继续对照查看。
-                  </>
-                ) : (
-                  <>
-                    你可以从排行榜、异常中心或增长模块中选择一个用户开始深挖；如果只是想先看全局，也可以继续浏览上面的平台级洞察。
-                  </>
-                )}
+                你可以从排行榜、异常中心或增长模块中选择一个用户，然后进入独立画像页做深挖分析。
               </p>
 
               <div className="mt-6 grid w-full gap-3 md:grid-cols-3">
@@ -2114,9 +1978,6 @@ export function AdvancedAnalyticsPage({
                     Quick Start
                   </p>
                   <p className="mt-2 text-sm font-semibold text-[var(--text)]">查看成本最高用户</p>
-                  <p className="mt-1 text-xs leading-5 text-[var(--text-dim)]">
-                    从 Top Cost 用户切入，快速定位主要费用来源。
-                  </p>
                 </button>
 
                 <button
@@ -2128,9 +1989,6 @@ export function AdvancedAnalyticsPage({
                     Risk First
                   </p>
                   <p className="mt-2 text-sm font-semibold text-[var(--text)]">查看高风险用户</p>
-                  <p className="mt-1 text-xs leading-5 text-[var(--text-dim)]">
-                    优先检查异常分数最高或最新命中异常的账号。
-                  </p>
                 </button>
 
                 <button
@@ -2142,36 +2000,6 @@ export function AdvancedAnalyticsPage({
                     Growth Scan
                   </p>
                   <p className="mt-2 text-sm font-semibold text-[var(--text)]">查看增长最快用户</p>
-                  <p className="mt-1 text-xs leading-5 text-[var(--text-dim)]">
-                    先跳到增长模块，筛出本月变化最大的账户。
-                  </p>
-                </button>
-              </div>
-
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-                <button
-                  type="button"
-                  className="analytics-chip"
-                  onClick={() => {
-                    setRankingTab('cost');
-                    handleSectionJump('analytics-ranking');
-                  }}
-                >
-                  去用户排行榜
-                </button>
-                <button
-                  type="button"
-                  className="analytics-chip"
-                  onClick={() => handleSectionJump('analytics-anomalies')}
-                >
-                  去异常中心
-                </button>
-                <button
-                  type="button"
-                  className="analytics-chip"
-                  onClick={openGrowthLeaders}
-                >
-                  去增长分析
                 </button>
               </div>
             </div>
