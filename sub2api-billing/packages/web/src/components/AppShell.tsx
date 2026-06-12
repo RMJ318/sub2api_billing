@@ -10,12 +10,12 @@ interface NavLink {
 }
 
 const NAV_LINKS: NavLink[] = [
-  { label: 'Dashboard', path: '/', icon: <DashboardIcon /> },
-  { label: 'Advanced Analytics', path: '/advanced-analytics', icon: <AdvancedAnalyticsIcon /> },
-  { label: 'Users', path: '/users', icon: <UsersIcon /> },
-  { label: 'Models', path: '/models', icon: <ModelsIcon /> },
-  { label: 'Keys', path: '/keys', icon: <KeysIcon /> },
-  { label: 'Cost', path: '/cost', icon: <CostIcon /> },
+  { label: '总览', path: '/', icon: <DashboardIcon /> },
+  { label: '高级分析', path: '/advanced-analytics', icon: <AdvancedAnalyticsIcon /> },
+  { label: '用户', path: '/users', icon: <UsersIcon /> },
+  { label: '模型', path: '/models', icon: <ModelsIcon /> },
+  { label: '密钥', path: '/keys', icon: <KeysIcon /> },
+  { label: '成本', path: '/cost', icon: <CostIcon /> },
 ];
 
 export interface AppShellProps {
@@ -36,7 +36,7 @@ export function AppShell({
   headerActions,
 }: AppShellProps): JSX.Element {
   const { theme, toggleTheme } = useTheme();
-  const { locale, setLocale, t } = useI18n();
+  const { t } = useI18n();
   const [navOpen, setNavOpen] = useState(false);
 
   return (
@@ -56,7 +56,7 @@ export function AppShell({
           </div>
         </div>
 
-        <nav aria-label="Main navigation" className="flex-1 px-3">
+        <nav aria-label="主导航" className="flex-1 px-3">
           <ul className="space-y-2">
             {NAV_LINKS.map((link) => {
               const active = activePath === link.path;
@@ -76,7 +76,7 @@ export function AppShell({
                         {link.path === '/'
                           ? t('nav.dashboard')
                           : link.path === '/advanced-analytics'
-                            ? 'Advanced Analytics'
+                            ? '高级分析'
                             : link.path === '/users'
                               ? t('nav.users')
                               : link.path === '/models'
@@ -111,7 +111,7 @@ export function AppShell({
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <button
                 type="button"
-                aria-label="Toggle navigation"
+                aria-label="切换导航"
                 className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-white/5 text-[var(--text)] hover:bg-white/10 md:hidden"
                 onClick={() => setNavOpen((prev) => !prev)}
               >
@@ -134,20 +134,9 @@ export function AppShell({
             ) : null}
 
             <div className="ml-auto flex items-center gap-2 md:gap-3">
-              <label className="hidden items-center gap-2 rounded-2xl border border-[var(--border)] bg-white/5 px-3 py-2 text-sm font-medium text-[var(--text-muted)] lg:inline-flex">
-                <span className="text-xs text-[var(--text-dim)]">{t('lang.label')}</span>
-                <select
-                  className="bg-transparent text-sm text-[var(--text)] outline-none"
-                  value={locale}
-                  onChange={(event) => setLocale(event.target.value as 'zh-CN' | 'en-US')}
-                >
-                  <option value="zh-CN">{t('lang.zh')}</option>
-                  <option value="en-US">{t('lang.en')}</option>
-                </select>
-              </label>
               <button
                 type="button"
-                aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                aria-label={theme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
                 className="inline-flex h-11 items-center gap-2 rounded-2xl border border-[var(--border)] bg-white/5 px-3 text-sm font-medium text-[var(--text-muted)] hover:bg-white/10 hover:text-[var(--text)]"
                 onClick={toggleTheme}
               >
@@ -156,14 +145,14 @@ export function AppShell({
               </button>
               <button
                 type="button"
-                aria-label="Notifications"
+                aria-label="通知"
                 className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-white/5 text-[var(--text-muted)] hover:bg-white/10 hover:text-[var(--text)]"
                 onClick={onBellClick}
               >
                 <BellIcon />
                 {unreadCount > 0 ? (
                   <span
-                    aria-label={`${unreadCount} unread notifications`}
+                    aria-label={`${unreadCount} 条未读通知`}
                     className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[var(--danger)] px-1 text-[10px] font-bold text-white"
                   >
                     {unreadCount > 99 ? '99+' : unreadCount}
@@ -211,7 +200,7 @@ export function AppShell({
                       {link.path === '/'
                         ? t('nav.dashboard')
                         : link.path === '/advanced-analytics'
-                          ? 'Advanced Analytics'
+                          ? '高级分析'
                           : link.path === '/users'
                             ? t('nav.users')
                             : link.path === '/models'

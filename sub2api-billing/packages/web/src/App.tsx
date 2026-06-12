@@ -15,6 +15,7 @@ import { SignalDrawer } from './components/SignalDrawer.js';
 import { UserRankingTable } from './components/UserRankingTable.js';
 import { useI18n } from './i18n.js';
 import { importCsvFile } from './lib/api.js';
+import { buildAdvancedAnalyticsData } from './lib/advancedAnalytics.js';
 import { AdvancedAnalyticsPage } from './pages/AdvancedAnalyticsPage.js';
 import { UserProfilePage } from './pages/UserProfilePage.js';
 import {
@@ -91,6 +92,18 @@ export function App(): JSX.Element {
   const signalsData = signalsQuery.data;
   const hasDashboardData = dashboardData !== undefined;
 
+  const formatMoney = (value: string | number | undefined): string => {
+    if (value === undefined) return t('status.unavailable');
+    const numeric = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(numeric)) return t('status.unavailable');
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(numeric);
+  };
+
   const safeUsersData = useMemo(
     () => ({
       rankings: usersData?.rankings ?? [],
@@ -144,6 +157,250 @@ export function App(): JSX.Element {
     }),
     [keyTrendData],
   );
+  const overviewAnalytics = useMemo(
+    () =>
+      buildAdvancedAnalyticsData({
+        billingMonth: billingMonth || months[0] || 'current',
+        dashboardData,
+        previousDashboardData,
+        usersData,
+        previousUsersData,
+        modelsData,
+        previousModelsData,
+        costData,
+        previousCostData,
+        signalsData,
+        selectedUserId,
+        userTrendData,
+      }),
+    [
+      billingMonth,
+      costData,
+      dashboardData,
+      modelsData,
+      months,
+      previousCostData,
+      previousDashboardData,
+      previousModelsData,
+      previousUsersData,
+      selectedUserId,
+      signalsData,
+      userTrendData,
+      usersData,
+    ],
+  );
+  const overviewKpis = overviewAnalytics.kpis.slice(0, 4);
+  const overviewInsightItems = overviewAnalytics.aiInsight.summary.slice(0, 3);
+  const overviewInsightStripItems = useMemo(
+    () =>
+      overviewInsightItems.map((item, index) => ({
+        ...item,
+        tone:
+          item.targetSection === 'analytics-anomalies'
+            ? ('danger' as const)
+            : item.targetSection === 'analytics-growth'
+              ? ('warning' as const)
+              : index === 0
+                ? ('primary' as const)
+                : ('success' as const),
+      })),
+    [overviewInsightItems],
+  );
+  const handleNavigate = (path: string) => {
+    navigate(path);
+  };
+
+  const openUserProfilePage = (userId: string) => {
+    setAdvancedAnalyticsGlobalView(false);
+    setSelectedUserId(userId);
+    navigate(`/advanced-analytics/users/${encodeURIComponent(userId)}`);
+  };
+
+  const openAdvancedAnalyticsOverview = () => {
+    setAdvancedAnalyticsGlobalView(true);
+    setSelectedUserId(null);
+    navigate('/advanced-analytics');
+  };
+
+  const openAdvancedAnalyticsSection = (
+    sectionId:
+      | 'analytics-overview'
+      | 'analytics-kpis'
+      | 'analytics-ranking'
+      | 'analytics-efficiency'
+      | 'analytics-growth'
+      | 'analytics-anomalies'
+      | 'analytics-heatmap'
+      | 'analytics-model-preference'
+      | 'analytics-segments'
+      | 'analytics-user-profile',
+  ) => {
+    setAdvancedAnalyticsGlobalView(true);
+    setSelectedUserId(null);
+    navigate(`/advanced-analytics#${sectionId}`);
+  };
+
+  const handleAdvancedAnalyticsSelectUser = (userId: string | null) => {
+    if (userId) {
+      setAdvancedAnalyticsGlobalView(false);
+      setSelectedUserId(userId);
+      return;
+    }
+
+    setAdvancedAnalyticsGlobalView(true);
+    setSelectedUserId(null);
+  };
+
+  const topRiskAnomaly = overviewAnalytics.anomalies[0] ?? null;
+  const topGrowthUser = overviewAnalytics.growth.cost[0] ?? null;
+  const topSpendUser = overviewAnalytics.rankingTabs.cost[0] ?? null;
+  const leadingModelPreference = [...overviewAnalytics.modelPreference].sort((a, b) => b.value - a.value)[0] ?? null;
+  const overviewAlertChips = useMemo(
+    () => [
+      {
+        id: 'risk-users',
+        label: '高风险用户',
+        value: `${overviewAnalytics.anomalies.length} 位`,
+        tone: 'danger' as const,
+        onClick: topRiskAnomaly
+          ? () => openUserProfilePage(topRiskAnomaly.userId)
+          : () => openAdvancedAnalyticsSection('analytics-anomalies'),
+      },
+      {
+        id: 'growth-users',
+        label: '增长异常',
+        value: `${overviewAnalytics.growth.cost.length} 位`,
+        tone: 'warning' as const,
+        onClick: topGrowthUser
+          ? () => openUserProfilePage(topGrowthUser.userId)
+          : () => openAdvancedAnalyticsSection('analytics-growth'),
+      },
+      {
+        id: 'model-focus',
+        label: '模型集中度',
+        value: leadingModelPreference ? `${leadingModelPreference.name} ${leadingModelPreference.value.toFixed(1)}%` : '待观察',
+        tone: 'primary' as const,
+        onClick: () => openAdvancedAnalyticsSection('analytics-model-preference'),
+      },
+      {
+        id: 'signal-unread',
+        label: '未读信号',
+        value: `${signalsData?.unreadCount ?? 0} 条`,
+        tone: 'neutral' as const,
+        onClick: () => setDrawerOpen(true),
+      },
+    ],
+    [
+      leadingModelPreference,
+      openAdvancedAnalyticsOverview,
+      overviewAnalytics.anomalies.length,
+      overviewAnalytics.growth.cost.length,
+      signalsData?.unreadCount,
+      topGrowthUser,
+      topRiskAnomaly,
+    ],
+  );
+  const overviewPrimaryTitle = topRiskAnomaly
+    ? `${topRiskAnomaly.user} 需要优先关注`
+    : topGrowthUser
+      ? `${topGrowthUser.user} 是本月增长焦点`
+      : '本月总览重点';
+  const overviewPrimaryDescription = topRiskAnomaly
+    ? `${topRiskAnomaly.detail} 当前风险评分 ${topRiskAnomaly.score}，建议优先确认是否由异常增长、深夜活跃或模型切换引起。`
+    : topGrowthUser
+      ? `${topGrowthUser.user} 的成本环比 ${topGrowthUser.growthPct >= 0 ? '+' : ''}${topGrowthUser.growthPct.toFixed(1)}%，适合先确认是否属于预期业务扩张。`
+      : '首页会优先汇总最值得关注的成本变化、增长信号和结构性风险，帮助你快速决定下一步要排查什么。';
+  const overviewActionItems = useMemo(
+    () => [
+      {
+        id: 'action-risk',
+        title: topRiskAnomaly ? `优先排查 ${topRiskAnomaly.user}` : '查看风险用户',
+        detail: topRiskAnomaly
+          ? `${topRiskAnomaly.type} · 评分 ${topRiskAnomaly.score} · 建议先进入用户画像定位异常原因`
+          : '进入高级分析查看本月最高优先级风险用户与异常信号',
+        onClick: topRiskAnomaly
+          ? () => openUserProfilePage(topRiskAnomaly.userId)
+          : () => openAdvancedAnalyticsSection('analytics-anomalies'),
+      },
+      {
+        id: 'action-signal',
+        title: '检查未读信号',
+        detail: `${signalsData?.unreadCount ?? 0} 条待处理信号，适合快速扫读预算、异常增长和模型波动`,
+        onClick: () => setDrawerOpen(true),
+      },
+      {
+        id: 'action-growth',
+        title: topGrowthUser ? `复核 ${topGrowthUser.user} 的增长来源` : '查看增长驱动',
+        detail: topGrowthUser
+          ? `成本环比 ${topGrowthUser.growthPct >= 0 ? '+' : ''}${topGrowthUser.growthPct.toFixed(1)}%，确认是否为健康增长或异常放量`
+          : '进入高级分析查看增长最快用户以及请求 / Token 放量原因',
+        onClick: topGrowthUser
+          ? () => openUserProfilePage(topGrowthUser.userId)
+          : () => openAdvancedAnalyticsSection('analytics-growth'),
+      },
+    ],
+    [signalsData?.unreadCount, topGrowthUser, topRiskAnomaly],
+  );
+  const priorityUserGroups = useMemo(
+    () => [
+      {
+        id: 'risk',
+        title: '高风险用户',
+        emptyText: '当前没有需要优先处理的高风险用户。',
+        items: topRiskAnomaly
+          ? [
+              {
+                id: `risk-${topRiskAnomaly.id}`,
+                userId: topRiskAnomaly.userId,
+                user: topRiskAnomaly.user,
+                badge: '风险',
+                tone: 'danger' as const,
+                summary: `${topRiskAnomaly.type} · 风险评分 ${topRiskAnomaly.score}`,
+                detail: topRiskAnomaly.detail,
+              },
+            ]
+          : [],
+      },
+      {
+        id: 'growth',
+        title: '增长最快用户',
+        emptyText: '当前没有明显增长异常用户。',
+        items: topGrowthUser
+          ? [
+              {
+                id: `growth-${topGrowthUser.userId}`,
+                userId: topGrowthUser.userId,
+                user: topGrowthUser.user,
+                badge: '增长',
+                tone: 'warning' as const,
+                summary: `成本环比 ${topGrowthUser.growthPct >= 0 ? '+' : ''}${topGrowthUser.growthPct.toFixed(1)}%`,
+                detail: `本月成本 ${formatMoney(topGrowthUser.currentCost)}，建议确认增长是否符合业务预期。`,
+              },
+            ]
+          : [],
+      },
+      {
+        id: 'spend',
+        title: '高消耗用户',
+        emptyText: '当前没有需要重点关注的高消耗用户。',
+        items: topSpendUser
+          ? [
+              {
+                id: `spend-${topSpendUser.userId}`,
+                userId: topSpendUser.userId,
+                user: topSpendUser.user,
+                badge: '成本',
+                tone: 'primary' as const,
+                summary: `成本占比 ${topSpendUser.sharePct.toFixed(1)}%`,
+                detail: `本月累计成本 ${formatMoney(topSpendUser.cost)}，适合优先审查模型与预算配置。`,
+              },
+            ]
+          : [],
+      },
+    ],
+    [formatMoney, topGrowthUser, topRiskAnomaly, topSpendUser],
+  );
+  const priorityUserCount = priorityUserGroups.reduce((sum, group) => sum + group.items.length, 0);
 
   const dateRangeValidationMessage = useMemo(() => {
     if (dateStart && dateEnd && dateStart > dateEnd) {
@@ -195,13 +452,13 @@ export function App(): JSX.Element {
   const pageMetaByPath: Record<string, { eyebrow: string; title: string; description: string }> = {
     '/': { eyebrow: t('page.usageAnalytics'), title: t('page.usageAnalytics'), description: t('page.description') },
     '/advanced-analytics': {
-      eyebrow: 'Advanced Analytics',
-      title: 'Advanced Analytics',
+      eyebrow: '高级分析',
+      title: '高级分析',
       description: '深度分析用户 API 使用行为、成本结构、增长趋势与异常风险。',
     },
     '/advanced-analytics/users/:userId': {
-      eyebrow: 'User Profile',
-      title: 'User Profile',
+      eyebrow: '用户画像',
+      title: '用户画像',
       description: '聚焦单个用户的成本、请求、模型偏好和风险信号。',
     },
     '/users': { eyebrow: t('nav.users'), title: t('nav.users'), description: t('page.description') },
@@ -210,18 +467,6 @@ export function App(): JSX.Element {
     '/cost': { eyebrow: t('nav.cost'), title: t('nav.cost'), description: t('page.description') },
   };
   const pageMeta = pageMetaByPath[isUserProfileRoute ? '/advanced-analytics/users/:userId' : activePath] ?? pageMetaByPath['/']!;
-
-  const formatMoney = (value: string | number | undefined): string => {
-    if (value === undefined) return t('status.unavailable');
-    const numeric = typeof value === 'number' ? value : Number(value);
-    if (!Number.isFinite(numeric)) return t('status.unavailable');
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(numeric);
-  };
 
   const formatKpiDelta = (deltaPct: number): string => {
     const arrow = deltaPct >= 0 ? '↑' : '↓';
@@ -291,27 +536,6 @@ export function App(): JSX.Element {
       setSelectedKeyId(filteredKeyRankings[0]!.apiKeyId);
     }
   }, [filteredKeyRankings, selectedKeyId]);
-
-  const handleNavigate = (path: string) => {
-    navigate(path);
-  };
-
-  const openUserProfilePage = (userId: string) => {
-    setAdvancedAnalyticsGlobalView(false);
-    setSelectedUserId(userId);
-    navigate(`/advanced-analytics/users/${encodeURIComponent(userId)}`);
-  };
-
-  const handleAdvancedAnalyticsSelectUser = (userId: string | null) => {
-    if (userId) {
-      setAdvancedAnalyticsGlobalView(false);
-      setSelectedUserId(userId);
-      return;
-    }
-
-    setAdvancedAnalyticsGlobalView(true);
-    setSelectedUserId(null);
-  };
 
   const spendTrendOption = useMemo<EChartsOption | undefined>(() => {
     if (!dashboardData) return undefined;
@@ -567,30 +791,257 @@ export function App(): JSX.Element {
 
       {activePath === '/' ? (
         <>
-          <DashboardSummaryCard title={t('kpi.totalSpend')} value={dashboardQuery.data?.kpis.totalSpendUsd !== undefined ? formatMoney(dashboardQuery.data.kpis.totalSpendUsd) : dashboardQuery.isLoading ? t('status.loading') : t('status.unavailable')} change={formatKpiDelta(12.4)} hint={t('kpi.comparedLastMonth')} />
-          <DashboardSummaryCard title={t('kpi.activeUsers')} value={dashboardQuery.data?.kpis.activeUserCount !== undefined ? dashboardQuery.data.kpis.activeUserCount : dashboardQuery.isLoading ? t('status.loading') : t('status.unavailable')} change={formatKpiDelta(8)} hint={t('kpi.comparedLastMonth')} />
-          <DashboardSummaryCard title={t('kpi.totalRequests')} value={dashboardData?.kpis.totalRequestCount !== undefined ? dashboardData.kpis.totalRequestCount.toLocaleString() : dashboardQuery.isLoading ? t('status.loading') : t('status.unavailable')} change={formatKpiDelta(23)} hint={t('kpi.comparedLastMonth')} />
-          <DashboardSummaryCard title={t('kpi.totalTokens')} value={dashboardData?.kpis.totalTokenCount !== undefined ? dashboardData.kpis.totalTokenCount.toLocaleString() : dashboardQuery.isLoading ? t('status.loading') : t('status.unavailable')} change={formatKpiDelta(17.2)} hint={t('kpi.comparedLastMonth')} />
+          {overviewKpis.map((kpi, index) => (
+            <DashboardSummaryCard
+              key={`${kpi.title}-${index}`}
+              title={kpi.title}
+              value={dashboardQuery.isLoading ? t('status.loading') : kpi.value}
+              change={dashboardQuery.isLoading ? undefined : kpi.change}
+              hint={kpi.hint}
+              tone={kpi.tone}
+              onClick={openAdvancedAnalyticsOverview}
+              actionLabel="查看分析"
+            />
+          ))}
+
+          <section className="glass-panel span-8 rounded-[26px] px-5 py-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-dim)]">
+                  本月重点结论
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--text)]">
+                  {overviewPrimaryTitle}
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">{overviewPrimaryDescription}</p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => openAdvancedAnalyticsSection('analytics-overview')}
+                  className="inline-flex h-10 items-center justify-center rounded-2xl border border-[var(--border-soft)] bg-white/5 px-4 text-sm font-medium text-[var(--text-muted)] transition hover:bg-white/10 hover:text-[var(--text)]"
+                >
+                  进入高级分析
+                </button>
+                <button
+                  type="button"
+                  onClick={topRiskAnomaly ? () => openUserProfilePage(topRiskAnomaly.userId) : () => setDrawerOpen(true)}
+                  className="inline-flex h-10 items-center justify-center rounded-2xl border border-[var(--border-soft)] bg-white/5 px-4 text-sm font-medium text-[var(--text-muted)] transition hover:bg-white/10 hover:text-[var(--text)]"
+                >
+                  {topRiskAnomaly ? '查看最高风险用户' : '查看未读信号'}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2.5">
+              {overviewAlertChips.map((chip) => (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={chip.onClick}
+                  className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-medium transition hover:opacity-90 ${
+                    chip.tone === 'danger'
+                      ? 'border-rose-400/20 bg-rose-500/10 text-rose-100'
+                      : chip.tone === 'warning'
+                        ? 'border-amber-300/20 bg-amber-500/10 text-amber-100'
+                        : chip.tone === 'primary'
+                          ? 'border-cyan-400/20 bg-cyan-500/10 text-cyan-100'
+                          : 'border-white/10 bg-white/6 text-[var(--text-muted)]'
+                  }`}
+                >
+                  <span>{chip.label}</span>
+                  <span className="text-xs font-semibold opacity-90">{chip.value}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-5 grid gap-3 xl:grid-cols-3">
+              {overviewInsightStripItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                   onClick={() =>
+                     openAdvancedAnalyticsSection(
+                       item.targetSection === 'analytics-anomalies'
+                         ? 'analytics-anomalies'
+                         : item.targetSection === 'analytics-growth'
+                           ? 'analytics-growth'
+                           : item.targetSection === 'analytics-model-preference'
+                             ? 'analytics-model-preference'
+                             : item.targetSection === 'analytics-ranking'
+                               ? 'analytics-ranking'
+                               : 'analytics-overview',
+                     )
+                   }
+                   className="rounded-2xl border border-[var(--border-soft)] bg-white/5 px-4 py-3 text-left transition hover:bg-white/10"
+                 >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                        item.tone === 'danger'
+                          ? 'bg-rose-500/15 text-rose-200'
+                          : item.tone === 'warning'
+                            ? 'bg-amber-500/15 text-amber-200'
+                            : item.tone === 'success'
+                              ? 'bg-emerald-500/15 text-emerald-200'
+                              : 'bg-cyan-500/15 text-cyan-200'
+                      }`}
+                    >
+                      {item.targetSection === 'analytics-anomalies'
+                        ? '风险'
+                        : item.targetSection === 'analytics-growth'
+                          ? '增长'
+                          : item.targetSection === 'analytics-model-preference'
+                            ? '模型'
+                            : '总览'}
+                    </span>
+                    <span className="text-[11px] font-semibold tracking-[0.14em] text-[var(--text-dim)]">
+                      {item.targetSection === 'analytics-anomalies'
+                        ? '异常关注'
+                        : item.targetSection === 'analytics-growth'
+                          ? '增长变化'
+                          : item.targetSection === 'analytics-model-preference'
+                            ? '模型结构'
+                            : '总览摘要'}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">{item.text}</p>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="glass-panel span-4 rounded-[26px] p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-dim)]">
+                  行动中心
+                </p>
+                <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--text)]">
+                  {topRiskAnomaly
+                    ? `${topRiskAnomaly.user} 需要先处理`
+                    : topGrowthUser
+                      ? `${topGrowthUser.user} 值得先复核`
+                      : `${signalsData?.unreadCount ?? 0} 条事项待处理`}
+                </p>
+              </div>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">
+              这里集中放置最适合马上执行的检查动作，让首页直接承担“先判断、再进入排查”的入口角色。
+            </p>
+            <div className="mt-4 space-y-3">
+              {overviewActionItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={item.onClick}
+                  className="flex w-full items-center justify-between rounded-2xl border border-[var(--border-soft)] bg-white/5 px-4 py-3 text-left transition hover:bg-white/10"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-[var(--text)]">{item.title}</p>
+                    <p className="mt-1 text-xs leading-5 text-[var(--text-dim)]">{item.detail}</p>
+                  </div>
+                  <span className="text-xs font-medium tracking-[0.16em] text-[var(--text-dim)]">进入</span>
+                </button>
+              ))}
+            </div>
+          </section>
 
           <EChartCard className="span-8" title={t('chart.dailySpendTrend')} subtitle={t('chart.dailySpendSubtitle')} option={spendTrendOption} loading={dashboardQuery.isLoading} empty={!hasDashboardData || dashboardData.dailyTrends.spend.length === 0} height={360} />
           <section className="glass-panel span-4 rounded-[26px] p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-dim)]">{t('signal.center')}</p>
-                <p className="mt-3 text-4xl font-semibold tracking-[-0.03em] text-[var(--text)]">{signalsData?.unreadCount ?? 0}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-dim)]">
+                  重点用户分组
+                </p>
+                <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--text)]">
+                  {priorityUserCount > 0 ? `${priorityUserCount} 个优先处理对象` : '当前暂无重点用户'}
+                </p>
               </div>
               <button
                 type="button"
-                onClick={() => setDrawerOpen(true)}
-                className="inline-flex h-11 items-center rounded-2xl border border-[var(--border-soft)] bg-white/5 px-4 text-sm font-medium text-[var(--text-muted)] transition hover:bg-white/10 hover:text-[var(--text)]"
-              >
-                {t('misc.open')}
+                 onClick={() => openAdvancedAnalyticsSection('analytics-anomalies')}
+                 className="inline-flex h-11 items-center rounded-2xl border border-[var(--border-soft)] bg-white/5 px-4 text-sm font-medium text-[var(--text-muted)] transition hover:bg-white/10 hover:text-[var(--text)]"
+               >
+                查看分析
               </button>
             </div>
-            <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">{t('signal.summary')}</p>
+            <div className="mt-4 space-y-4">
+              {priorityUserGroups.map((group) => (
+                <div key={group.id} className="rounded-2xl border border-[var(--border-soft)] bg-white/5 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-[var(--text)]">{group.title}</p>
+                    <span className="text-xs text-[var(--text-dim)]">{group.items.length} 位</span>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    {group.items.length > 0 ? (
+                      group.items.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => openUserProfilePage(item.userId)}
+                          className="w-full rounded-2xl border border-white/8 bg-white/4 px-3 py-3 text-left transition hover:bg-white/10"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span
+                                  className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                                    item.tone === 'danger'
+                                      ? 'bg-rose-500/15 text-rose-200'
+                                      : item.tone === 'warning'
+                                        ? 'bg-amber-500/15 text-amber-200'
+                                        : 'bg-cyan-500/15 text-cyan-200'
+                                  }`}
+                                >
+                                  {item.badge}
+                                </span>
+                                <span className="text-sm font-medium text-[var(--text)]">{item.user}</span>
+                              </div>
+                              <p className="mt-2 text-sm text-[var(--text-muted)]">{item.summary}</p>
+                              <p className="mt-1 text-xs leading-5 text-[var(--text-dim)]">{item.detail}</p>
+                            </div>
+                            <span className="text-xs font-medium tracking-[0.16em] text-[var(--text-dim)]">打开</span>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="rounded-2xl border border-white/8 bg-white/4 px-3 py-3 text-sm text-[var(--text-muted)]">
+                        {group.emptyText}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </section>
-          <EChartCard className="span-4" title={t('chart.modelDistribution')} subtitle={t('chart.modelDistributionSubtitle')} option={modelShareOption} loading={dashboardQuery.isLoading} empty={!hasDashboardData} height={320} />
-          <EChartCard className="span-4" title={t('chart.topUsers')} subtitle={t('chart.topUsersSubtitle')} option={topUsersOption} loading={dashboardQuery.isLoading} empty={!hasDashboardData || dashboardData.topUserSpend.length === 0} height={320} />
+          <EChartCard
+            className="span-4"
+            title={t('chart.modelDistribution')}
+            subtitle={
+              leadingModelPreference
+                ? `${leadingModelPreference.name} 为本月主力模型`
+                : t('chart.modelDistributionSubtitle')
+            }
+            option={modelShareOption}
+            loading={dashboardQuery.isLoading}
+            empty={!hasDashboardData}
+            height={320}
+          />
+          <EChartCard
+            className="span-4"
+            title={t('chart.topUsers')}
+            subtitle={
+              topGrowthUser
+                ? `${topGrowthUser.user} 增长 ${topGrowthUser.growthPct >= 0 ? '+' : ''}${topGrowthUser.growthPct.toFixed(1)}%`
+                : t('chart.topUsersSubtitle')
+            }
+            option={topUsersOption}
+            loading={dashboardQuery.isLoading}
+            empty={!hasDashboardData || dashboardData.topUserSpend.length === 0}
+            height={320}
+          />
           <EChartCard className="span-8" title={t('chart.costBreakdown')} subtitle={t('chart.costBreakdownSubtitle')} option={costCompositionOption} loading={dashboardQuery.isLoading} empty={!hasDashboardData} height={320} />
         </>
       ) : null}

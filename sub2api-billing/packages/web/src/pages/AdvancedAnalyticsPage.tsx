@@ -704,16 +704,32 @@ export function AdvancedAnalyticsPage({
     return () => observer.disconnect();
   }, []);
 
-  const scrollToSection = (sectionId: AnalyticsSectionId) => {
+  const scrollToSection = (sectionId: AnalyticsSectionId, behavior: ScrollBehavior = 'smooth') => {
     setActiveSectionId(sectionId);
 
     window.requestAnimationFrame(() => {
       const element = document.getElementById(sectionId);
       if (!element) return;
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      element.scrollIntoView({ behavior, block: 'start' });
       window.history.replaceState(null, '', `#${sectionId}`);
     });
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const hash = window.location.hash.replace('#', '');
+    if (!hash) return;
+
+    const isAnalyticsSection = analyticsSections.some((section) => section.id === hash);
+    if (!isAnalyticsSection) return;
+
+    const sectionId = hash as AnalyticsSectionId;
+
+    window.requestAnimationFrame(() => {
+      scrollToSection(sectionId, 'auto');
+    });
+  }, []);
 
   const handleInsightClick = (item: AdvancedAnalyticsInsightItem) => {
     if (item.targetSection === 'analytics-ranking') {

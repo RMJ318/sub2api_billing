@@ -301,10 +301,10 @@ export function UserProfilePage({
     return (
       <section className="span-12">
         <div className="glass-panel rounded-[26px] p-6">
-          <p className="text-sm text-[var(--text-muted)]">当前没有可展示的用户画像，请先从 Advanced Analytics 中选择一个用户。</p>
+          <p className="text-sm text-[var(--text-muted)]">当前没有可展示的用户画像，请先从高级分析中选择一个用户。</p>
           {onBackToAnalytics ? (
             <button type="button" className="analytics-chip mt-4" onClick={onBackToAnalytics}>
-              返回 Advanced Analytics
+              返回高级分析
             </button>
           ) : null}
         </div>

@@ -146,9 +146,37 @@ const toNumber = (value: string | number | undefined): number => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const makeDeltaLabel = (deltaPct: number): string => {
+const makeDeltaLabel = (deltaPct: number, semanticLabel?: string): string => {
   const arrow = deltaPct >= 0 ? '↑' : '↓';
-  return `${arrow} ${Math.abs(deltaPct).toFixed(1)}% vs last month`;
+  const base = `${arrow} ${Math.abs(deltaPct).toFixed(1)}% vs last month`;
+  return semanticLabel ? `${base} · ${semanticLabel}` : base;
+};
+
+const getActiveUserDeltaLabel = (deltaPct: number): string => {
+  if (deltaPct >= 12) return '活跃增长';
+  if (deltaPct >= 0) return '稳步增长';
+  if (deltaPct <= -18) return '活跃回落';
+  return '轻微回落';
+};
+
+const getCostDeltaLabel = (deltaPct: number): string => {
+  if (deltaPct <= -12) return '成本改善';
+  if (deltaPct < 0) return '小幅改善';
+  if (deltaPct >= 18) return '成本抬升';
+  return '轻微上涨';
+};
+
+const getUsageGrowthLabel = (
+  deltaPct: number,
+  riskSignals: { highRiskCount: number; totalRiskUsers: number },
+): string => {
+  if (deltaPct < -18) return '活跃回落';
+  if (deltaPct < 0) return '轻微回落';
+  if (deltaPct <= 18) return '健康增长';
+  if (deltaPct <= 45) return riskSignals.totalRiskUsers > 0 ? '增长过快' : '扩张提速';
+  if (riskSignals.highRiskCount > 0) return '高风险放量';
+  if (riskSignals.totalRiskUsers > 0) return '风险放量';
+  return '增长过快';
 };
 
 const pseudoDelta = (seed: number, min = -8, max = 38): number => {
@@ -209,6 +237,33 @@ function aggregateModelPreference(
 }
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+
+type KpiTone = NonNullable<AdvancedAnalyticsData['kpis'][number]['tone']>;
+
+const resolveGrowthTone = (deltaPct: number, positiveIsGood = true): KpiTone => {
+  const normalizedDelta = positiveIsGood ? deltaPct : -deltaPct;
+
+  if (normalizedDelta >= 12) return 'success';
+  if (normalizedDelta >= 0) return 'primary';
+  if (normalizedDelta <= -18) return 'danger';
+  return 'warning';
+};
+
+const resolveRiskTone = (highRiskCount: number, totalRiskUsers: number): KpiTone => {
+  if (highRiskCount > 0) return 'danger';
+  if (totalRiskUsers > 0) return 'warning';
+  return 'success';
+};
+
+const resolveUsageGrowthTone = (deltaPct: number, riskSignals: { highRiskCount: number; totalRiskUsers: number }): KpiTone => {
+  if (deltaPct < -18) return 'danger';
+  if (deltaPct < 0) return 'warning';
+  if (deltaPct <= 18) return 'success';
+  if (deltaPct <= 45) return riskSignals.totalRiskUsers > 0 ? 'warning' : 'primary';
+  if (riskSignals.highRiskCount > 0) return 'danger';
+  if (riskSignals.totalRiskUsers > 0) return 'warning';
+  return 'warning';
+};
 
 const calcPctChange = (current: number, previous: number): number => {
   if (previous <= 0) {
@@ -453,6 +508,7 @@ export function buildAdvancedAnalyticsData(input: {
   const modelPreference = aggregateModelPreference(dashboardData, modelsData);
   const top10CostShare = costRows.slice(0, 10).reduce((sum, row) => sum + row.sharePct, 0);
   const highRiskCount = anomalies.filter((item) => item.risk === 'high').length;
+  const riskUserCount = new Set(anomalies.map((item) => item.userId)).size;
   const unreadSignals = signalsData?.unreadCount ?? anomalies.length;
   const heatmap = buildHeatmap(rankings);
   const selectedUser = rankings.find((row) => row.userId === selectedUserId) ?? rankings[0] ?? null;
@@ -511,37 +567,55 @@ export function buildAdvancedAnalyticsData(input: {
     {
       title: '总活跃用户',
       value: formatNumber(dashboardData?.kpis.activeUserCount ?? rankings.length),
-      change: makeDeltaLabel(activeUsersDelta),
+      change: makeDeltaLabel(activeUsersDelta, getActiveUserDeltaLabel(activeUsersDelta)),
       hint: '本期发生 API 调用的唯一用户数',
-      tone: 'success' as const,
+      tone: resolveGrowthTone(activeUsersDelta, true),
     },
     {
       title: '总成本',
       value: formatMoney(totalCost),
-      change: makeDeltaLabel(totalCostDelta),
+      change: makeDeltaLabel(totalCostDelta, getCostDeltaLabel(totalCostDelta)),
       hint: '涵盖输入、输出、缓存与图像成本',
-      tone: 'primary' as const,
+      tone: resolveGrowthTone(totalCostDelta, false),
     },
     {
       title: '总请求量',
       value: formatNumber(totalRequests),
-      change: makeDeltaLabel(totalRequestDelta),
+      change: makeDeltaLabel(
+        totalRequestDelta,
+        getUsageGrowthLabel(totalRequestDelta, {
+          highRiskCount,
+          totalRiskUsers: riskUserCount,
+        }),
+      ),
       hint: '所有 API 请求总量',
-      tone: 'primary' as const,
+      tone: resolveUsageGrowthTone(totalRequestDelta, {
+        highRiskCount,
+        totalRiskUsers: riskUserCount,
+      }),
     },
     {
       title: '总 Token',
       value: formatCompact(totalTokens),
-      change: makeDeltaLabel(totalTokenDelta),
+      change: makeDeltaLabel(
+        totalTokenDelta,
+        getUsageGrowthLabel(totalTokenDelta, {
+          highRiskCount,
+          totalRiskUsers: riskUserCount,
+        }),
+      ),
       hint: '含输入、输出与缓存 Token',
-      tone: 'warning' as const,
+      tone: resolveUsageGrowthTone(totalTokenDelta, {
+        highRiskCount,
+        totalRiskUsers: riskUserCount,
+      }),
     },
     {
       title: '异常用户数',
-      value: formatNumber(new Set(anomalies.map((item) => item.userId)).size),
-      change: highRiskCount > 0 ? `🔴 High x${highRiskCount}` : '🟢 Low',
+      value: formatNumber(riskUserCount),
+      change: highRiskCount > 0 ? `🔴 High x${highRiskCount}` : riskUserCount > 0 ? `🟠 Monitor x${riskUserCount}` : '🟢 Low',
       hint: `当前待关注风险信号 ${unreadSignals} 条`,
-      tone: highRiskCount > 0 ? ('danger' as const) : ('success' as const),
+      tone: resolveRiskTone(highRiskCount, riskUserCount),
     },
   ];
 
@@ -584,7 +658,6 @@ export function buildAdvancedAnalyticsData(input: {
         },
   ];
 
-  const riskUserCount = new Set(anomalies.map((item) => item.userId)).size;
   const powerUserCount = Math.max(1, Math.ceil(rankings.length * 0.1));
   const growingUserCount = growthCost.filter((item) => item.growthPct >= 50).length;
   const costHeavyUserCount = costRows.filter((item) => item.sharePct >= 8).length;

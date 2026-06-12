@@ -17,8 +17,11 @@
   "scripts": {
     "build": "tsc -b",
     "build:web": "npm run build --workspace @app/web",
+    "check:web": "npm run build:web",
     "clean": "tsc -b --clean && rimraf --glob packages/*/dist packages/web/dist",
+    "rebuild:web": "npm run clean && npm run build:web",
     "typecheck": "tsc -b && npm run typecheck --workspace @app/web",
+    "typecheck:web": "npm run typecheck --workspace @app/web",
     "test": "vitest run",
     "test:watch": "vitest",
     "dev:api": "npm run dev --workspace @app/api",
