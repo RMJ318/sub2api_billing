@@ -9,13 +9,28 @@ interface NavLink {
   icon: ReactNode;
 }
 
-const NAV_LINKS: NavLink[] = [
-  { label: '总览', path: '/', icon: <DashboardIcon /> },
-  { label: '高级分析', path: '/advanced-analytics', icon: <AdvancedAnalyticsIcon /> },
-  { label: '用户', path: '/users', icon: <UsersIcon /> },
-  { label: '模型', path: '/models', icon: <ModelsIcon /> },
-  { label: '密钥', path: '/keys', icon: <KeysIcon /> },
-  { label: '成本', path: '/cost', icon: <CostIcon /> },
+interface NavGroup {
+  title: string;
+  links: NavLink[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    title: '主入口',
+    links: [
+      { label: '总览', path: '/', icon: <DashboardIcon /> },
+      { label: '高级分析', path: '/advanced-analytics', icon: <AdvancedAnalyticsIcon /> },
+    ],
+  },
+  {
+    title: '专项工作台',
+    links: [
+      { label: '用户工作台', path: '/users', icon: <UsersIcon /> },
+      { label: '模型策略台', path: '/models', icon: <ModelsIcon /> },
+      { label: '密钥治理台', path: '/keys', icon: <KeysIcon /> },
+      { label: '成本处置台', path: '/cost', icon: <CostIcon /> },
+    ],
+  },
 ];
 
 export interface AppShellProps {
@@ -57,39 +72,33 @@ export function AppShell({
         </div>
 
         <nav aria-label="主导航" className="flex-1 px-3">
-          <ul className="space-y-2">
-            {NAV_LINKS.map((link) => {
-              const active = activePath === link.path;
-              return (
-                <li key={link.path}>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate?.(link.path)}
-                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition ${
-                      active
-                        ? 'bg-[var(--secondary-strong)] text-[#00311f] shadow-[0_12px_30px_rgba(0,165,114,0.25)]'
-                        : 'text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text)]'
-                    }`}
-                  >
-                    <span className="opacity-90">{link.icon}</span>
-                      <span>
-                        {link.path === '/'
-                          ? t('nav.dashboard')
-                          : link.path === '/advanced-analytics'
-                            ? '高级分析'
-                            : link.path === '/users'
-                              ? t('nav.users')
-                              : link.path === '/models'
-                                ? t('nav.models')
-                                : link.path === '/keys'
-                                  ? t('nav.keys')
-                                  : t('nav.cost')}
-                      </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          {NAV_GROUPS.map((group, groupIndex) => (
+            <div
+              key={group.title}
+              className={groupIndex === 0 ? '' : 'mt-5 border-t border-[var(--border-soft)] pt-5'}
+            >
+              <p className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-dim)]">
+                {group.title}
+              </p>
+              <ul className="space-y-2">
+                {group.links.map((link) => {
+                  const active = activePath === link.path;
+                  return (
+                    <li key={link.path}>
+                      <button
+                        type="button"
+                        onClick={() => onNavigate?.(link.path)}
+                        className={linkClassName(link.path, active)}
+                      >
+                        <span className="opacity-90">{link.icon}</span>
+                        <span>{resolveNavLabel(link.path, t)}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
         <div className="mt-6 border-t border-[var(--border-soft)] p-3">
@@ -179,40 +188,36 @@ export function AppShell({
                 <CloseIcon />
               </button>
             </div>
-            <ul className="space-y-2">
-              {NAV_LINKS.map((link) => {
-                const active = activePath === link.path;
-                return (
-                  <li key={link.path}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onNavigate?.(link.path);
-                        setNavOpen(false);
-                      }}
-                      className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition ${
-                        active
-                          ? 'bg-[var(--secondary-strong)] text-[#00311f]'
-                          : 'text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text)]'
-                      }`}
-                    >
-                      {link.icon}
-                      {link.path === '/'
-                        ? t('nav.dashboard')
-                        : link.path === '/advanced-analytics'
-                          ? '高级分析'
-                          : link.path === '/users'
-                            ? t('nav.users')
-                            : link.path === '/models'
-                              ? t('nav.models')
-                              : link.path === '/keys'
-                                ? t('nav.keys')
-                                : t('nav.cost')}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            {NAV_GROUPS.map((group, groupIndex) => (
+              <div
+                key={group.title}
+                className={groupIndex === 0 ? '' : 'mt-5 border-t border-[var(--border-soft)] pt-5'}
+              >
+                <p className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-dim)]">
+                  {group.title}
+                </p>
+                <ul className="space-y-2">
+                  {group.links.map((link) => {
+                    const active = activePath === link.path;
+                    return (
+                      <li key={link.path}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onNavigate?.(link.path);
+                            setNavOpen(false);
+                          }}
+                          className={linkClassName(link.path, active)}
+                        >
+                          {link.icon}
+                          {resolveNavLabel(link.path, t)}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
           </nav>
         </div>
       ) : null}
@@ -223,6 +228,26 @@ export function AppShell({
       </div>
     </div>
   );
+}
+
+function resolveNavLabel(path: string, t: (key: string) => string): string {
+  if (path === '/') return t('nav.dashboard');
+  if (path === '/advanced-analytics') return '高级分析';
+  if (path === '/users') return '用户工作台';
+  if (path === '/models') return '模型策略台';
+  if (path === '/keys') return '密钥治理台';
+  return '成本处置台';
+}
+
+function linkClassName(path: string, active: boolean): string {
+  const isPrimary = path === '/' || path === '/advanced-analytics';
+  if (active && isPrimary) {
+    return 'flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition bg-[var(--secondary-strong)] text-[#00311f] shadow-[0_12px_30px_rgba(0,165,114,0.25)]';
+  }
+  if (active) {
+    return 'flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition border border-[rgba(77,142,255,0.24)] bg-[rgba(77,142,255,0.14)] text-[var(--text)] shadow-[0_10px_24px_rgba(77,142,255,0.12)]';
+  }
+  return 'flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text)]';
 }
 
 function AnalyticsIcon() {
